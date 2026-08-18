@@ -31,11 +31,20 @@ export const appointmentService = {
     return await api.patch(`/appointments/${id}/status`, statusData);
   },
 
-  uploadDocument: async (id, file) => {
+  uploadDocument: async (id, file, category = 'Diagnostic Scan (MRI/CT/X-Ray)') => {
     const formData = new FormData();
     formData.append('medicalReport', file);
+    formData.append('category', category);
     return await api.post(`/appointments/${id}/upload-document`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+  },
+
+  getVisaLetter: async (idOrRef) => {
+    return await api.get(`/appointments/${idOrRef}/visa-letter`);
+  },
+
+  updateFlightLogistics: async (id, flightData) => {
+    return await api.patch(`/appointments/${id}/flight-logistics`, flightData);
   },
 };

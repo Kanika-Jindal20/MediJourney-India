@@ -8,6 +8,8 @@ const {
   getAppointmentById,
   updateAppointmentStatus,
   uploadDocument,
+  getVisaInvitationLetter,
+  updateFlightLogistics,
 } = require('../controllers/appointmentController');
 const { protect, optionalAuth, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -24,6 +26,9 @@ router.get('/doctor-queue', protect, authorize('doctor', 'admin'), getDoctorQueu
 // Admin master ledger
 router.get('/admin-all', protect, authorize('admin'), getAdminAppointments);
 
+// Hospital Visa Invitation Letter
+router.get('/:idOrRef/visa-letter', getVisaInvitationLetter);
+
 // Single appointment lookup
 router.get('/:idOrRef', getAppointmentById);
 
@@ -32,5 +37,8 @@ router.patch('/:id/status', protect, updateAppointmentStatus);
 
 // Upload extra document
 router.post('/:id/upload-document', upload.single('medicalReport'), uploadDocument);
+
+// Update flight logistics
+router.patch('/:id/flight-logistics', updateFlightLogistics);
 
 module.exports = router;
