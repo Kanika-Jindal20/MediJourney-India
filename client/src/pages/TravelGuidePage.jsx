@@ -13,6 +13,12 @@ import {
   ShieldCheck,
   Compass,
   CreditCard,
+  CheckSquare,
+  Square,
+  AlertCircle,
+  Clock,
+  Info,
+  Luggage,
 } from 'lucide-react';
 
 export const TravelGuidePage = () => {
@@ -23,6 +29,12 @@ export const TravelGuidePage = () => {
   // Currency Converter Calculator state
   const [calcAmount, setCalcAmount] = useState(2500);
   const [calcCurrency, setCalcCurrency] = useState('USD');
+
+  // Country Visa Selector State
+  const [selectedCountryCode, setSelectedCountryCode] = useState('US');
+
+  // Interactive Checklist State
+  const [checkedItems, setCheckedItems] = useState({});
 
   useEffect(() => {
     const loadGuide = async () => {
@@ -39,6 +51,13 @@ export const TravelGuidePage = () => {
     loadGuide();
   }, []);
 
+  const toggleCheckItem = (id) => {
+    setCheckedItems((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-24 text-center">
@@ -48,10 +67,21 @@ export const TravelGuidePage = () => {
     );
   }
 
-  const { visaInfo, cityGuides, currencyRates } = guideData || {};
+  const { visaInfo, preDepartureChecklist, cityGuides, currencyRates } = guideData || {};
 
   // Conversion helper
-  const inrAmount = calcAmount * (currencyRates?.rates?.INR || 83.5) / (currencyRates?.rates?.[calcCurrency] || 1);
+  const inrAmount = ((calcAmount * (currencyRates?.rates?.INR || 83.5)) / (currencyRates?.rates?.[calcCurrency] || 1));
+
+  // Current selected country rules
+  const activeCountryRule =
+    visaInfo?.countryRules?.find((c) => c.code === selectedCountryCode) ||
+    visaInfo?.countryRules?.[0] || {
+      country: 'United States',
+      code: 'US',
+      feeUSD: 80,
+      processingDays: '3-4 Days',
+      specialNotes: 'Standard e-Medical Visa online application.',
+    };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
@@ -71,12 +101,12 @@ export const TravelGuidePage = () => {
         </div>
       </div>
 
-      {/* 1. INDIAN E-MEDICAL VISA GUIDELINES */}
+      {/* 1. INTERACTIVE COUNTRY VISA SELECTOR & VISA GUIDELINES */}
       <section className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">
-              Visa Regulations
+              Visa Regulations & Eligibility
             </span>
             <h2 className="text-2xl font-extrabold text-slate-900 font-display mt-0.5">
               Indian e-Medical Visa (MED) & Attendant Visa (MED-X)
@@ -86,13 +116,68 @@ export const TravelGuidePage = () => {
             href="https://indianvisaonline.gov.in/evisa/tvoa.html"
             target="_blank"
             rel="noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition shrink-0"
           >
-            <span>Official Government Portal</span>
+            <span>Official Government e-Visa Portal</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
 
+        {/* Nationality Calculator Widget */}
+        <div className="bg-gradient-to-r from-teal-900 to-navy-950 text-white rounded-3xl p-6 sm:p-8 border border-teal-500/20 shadow-lg space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <span className="text-teal-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <Globe className="w-4 h-4" /> Country-Specific Visa Eligibility Checker
+              </span>
+              <h3 className="text-xl font-bold font-display">
+                Select Your Nationality for Tailored Visa Requirements
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-300">Your Passport:</span>
+              <select
+                value={selectedCountryCode}
+                onChange={(e) => setSelectedCountryCode(e.target.value)}
+                className="bg-slate-800 text-white border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-teal-400"
+              >
+                {visaInfo?.countryRules?.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.country}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 space-y-1">
+              <span className="text-slate-400 block text-[10px] uppercase font-bold">Estimated Government Fee</span>
+              <span className="text-xl font-extrabold text-teal-300 font-display">
+                {activeCountryRule.feeUSD === 0 ? 'Free / Nil (Bilateral)' : `$${activeCountryRule.feeUSD} USD`}
+              </span>
+              <p className="text-[10px] text-slate-400">Paid directly on government portal</p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 space-y-1">
+              <span className="text-slate-400 block text-[10px] uppercase font-bold">Estimated Processing Time</span>
+              <span className="text-xl font-extrabold text-teal-300 font-display">
+                {activeCountryRule.processingDays}
+              </span>
+              <p className="text-[10px] text-slate-400">Electronic Travel Authorization (ETA)</p>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 space-y-1">
+              <span className="text-slate-400 block text-[10px] uppercase font-bold">Country Advisory Note</span>
+              <p className="text-xs text-slate-200 leading-relaxed font-medium">
+                {activeCountryRule.specialNotes}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Visa Categories Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {visaInfo?.categories?.map((cat, idx) => (
             <div
@@ -113,8 +198,8 @@ export const TravelGuidePage = () => {
               </p>
 
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 text-xs">
-                <div className="font-bold text-slate-800">Mandatory Documents:</div>
-                <ul className="space-y-1 text-slate-600">
+                <div className="font-bold text-slate-800">Mandatory Documents Checklist:</div>
+                <ul className="space-y-1.5 text-slate-600">
                   {cat.documentsRequired?.map((doc, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="text-teal-600 font-bold">•</span>
@@ -124,9 +209,12 @@ export const TravelGuidePage = () => {
                 </ul>
               </div>
 
-              <div className="text-[11px] text-slate-500 flex items-center justify-between pt-2">
+              <div className="text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
                 <span>Entry Allowance: <strong>{cat.entries}</strong></span>
                 <span>Processing: <strong>{cat.processingTime || '72-96 Hours'}</strong></span>
+                {cat.extensionPermitted && (
+                  <span className="text-teal-700 font-medium">FRRO Extension: Up to 1 Year</span>
+                )}
               </div>
             </div>
           ))}
@@ -135,13 +223,18 @@ export const TravelGuidePage = () => {
 
       {/* 2. VISA STEP-BY-STEP PROCESS */}
       <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
-        <h3 className="text-xl font-bold text-slate-900 font-display">
-          How to Obtain Your Indian Medical Visa
-        </h3>
+        <div>
+          <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">
+            Clear Workflow
+          </span>
+          <h3 className="text-xl font-bold text-slate-900 font-display mt-0.5">
+            How to Obtain Your Indian Medical Visa in 4 Simple Steps
+          </h3>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {visaInfo?.stepByStepProcess?.map((step) => (
-            <div key={step.step} className="space-y-2 text-xs">
+            <div key={step.step} className="space-y-2 text-xs p-4 rounded-2xl bg-slate-50 border border-slate-100">
               <div className="w-8 h-8 rounded-xl bg-teal-600 text-white font-bold flex items-center justify-center text-sm shadow-md">
                 {step.step}
               </div>
@@ -152,7 +245,62 @@ export const TravelGuidePage = () => {
         </div>
       </section>
 
-      {/* 3. CURRENCY ESTIMATOR */}
+      {/* 3. INTERACTIVE PRE-DEPARTURE MEDICAL TRAVEL CHECKLIST */}
+      {preDepartureChecklist && (
+        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">
+                Travel Readiness
+              </span>
+              <h3 className="text-xl font-bold text-slate-900 font-display mt-0.5">
+                Interactive Pre-Departure Medical Packing & Readiness Checklist
+              </h3>
+            </div>
+            <span className="text-xs text-slate-400">Tick items off as you prepare for departure</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {preDepartureChecklist.map((group, gIdx) => (
+              <div key={gIdx} className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+                <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <Luggage className="w-4 h-4 text-teal-600" />
+                  {group.category}
+                </h4>
+
+                <div className="space-y-2 text-xs">
+                  {group.items.map((item, itemIdx) => {
+                    const itemId = `chk_${gIdx}_${itemIdx}`;
+                    const isChecked = Boolean(checkedItems[itemId]);
+                    return (
+                      <div
+                        key={itemIdx}
+                        onClick={() => toggleCheckItem(itemId)}
+                        className={`flex items-start gap-2 p-2 rounded-xl border transition cursor-pointer ${
+                          isChecked
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-950 line-through opacity-80'
+                            : 'bg-white border-slate-200 text-slate-700 hover:border-teal-400'
+                        }`}
+                      >
+                        <button type="button" className="shrink-0 mt-0.5 text-teal-600">
+                          {isChecked ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                        </button>
+                        <span className="leading-snug">{item}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 4. CURRENCY ESTIMATOR */}
       <section className="bg-gradient-to-r from-teal-900 to-navy-950 text-white rounded-3xl p-8 shadow-xl border border-teal-500/20 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div className="space-y-3">
           <span className="text-teal-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
@@ -206,7 +354,7 @@ export const TravelGuidePage = () => {
         </div>
       </section>
 
-      {/* 4. CITY LOGISTICS & ACCOMMODATION GUIDES */}
+      {/* 5. CITY LOGISTICS & ACCOMMODATION GUIDES */}
       <section className="space-y-6">
         <div>
           <span className="text-xs font-bold text-teal-600 uppercase tracking-wider">
@@ -238,6 +386,11 @@ export const TravelGuidePage = () => {
                     <Plane className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                     <span>{city.airport}</span>
                   </div>
+                  {city.terminalPickup && (
+                    <div className="text-[11px] text-teal-800 font-medium pl-5">
+                      Pickup: {city.terminalPickup}
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
                     <Compass className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                     <span>{city.weather}</span>

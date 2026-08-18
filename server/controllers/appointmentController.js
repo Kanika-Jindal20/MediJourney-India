@@ -35,6 +35,12 @@ exports.createAppointment = async (req, res, next) => {
       preferredLanguage,
       visaAssistanceRequired,
       airportPickupRequired,
+      flightNumber,
+      airline,
+      arrivalDateTime,
+      pickupTerminal,
+      attendantsCount,
+      reportCategory,
       slotId,
     } = req.body;
 
@@ -71,6 +77,7 @@ exports.createAppointment = async (req, res, next) => {
         fileName: file.originalname,
         fileUrl: `/uploads/${file.filename}`,
         fileType: file.mimetype,
+        category: reportCategory || 'Diagnostic Scan (MRI/CT/X-Ray)',
       }));
     }
 
@@ -94,6 +101,11 @@ exports.createAppointment = async (req, res, next) => {
       preferredLanguage: preferredLanguage || 'English',
       visaAssistanceRequired: Boolean(visaAssistanceRequired),
       airportPickupRequired: Boolean(airportPickupRequired),
+      flightNumber: flightNumber || '',
+      airline: airline || '',
+      arrivalDateTime: arrivalDateTime || '',
+      pickupTerminal: pickupTerminal || '',
+      attendantsCount: Number(attendantsCount) || 0,
     });
 
     // If a specific slot ID was passed, mark it booked
@@ -326,6 +338,7 @@ exports.uploadDocument = async (req, res, next) => {
       fileName: req.file.originalname,
       fileUrl: `/uploads/${req.file.filename}`,
       fileType: req.file.mimetype,
+      category: req.body.category || 'Diagnostic Scan (MRI/CT/X-Ray)',
       uploadedAt: new Date(),
     };
 
@@ -336,6 +349,115 @@ exports.uploadDocument = async (req, res, next) => {
       success: true,
       message: 'Medical report uploaded successfully',
       medicalReports: appointment.medicalReports,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Generate official Hospital Medical Visa Invitation Letter
+// @route   GET /api/appointments/:idOrRef/visa-letter
+// @access  Public / Patient / Doctor
+exports.getVisaInvitationLetter = async (req, res, next) => {
+  try {
+    const { idOrRef } = req.params;
+    let appointment;
+
+    if (idOrRef.match(/^[0-9a-fA-F]{24}$/)) {
+      appointment = await Appointment.findById(idOrRef)
+        .populate('doctorId')
+        .populate('hospitalId')
+        .populate('treatmentId');
+    } else {
+      appointment = await Appointment.findOne({ appointmentRef: idOrRef.toUpperCase() })
+        .populate('doctorId')
+        .populate('hospitalId')
+        .populate('treatmentId');
+    }
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    const hospital = appointment.hospitalId || {};
+    const doctor = appointment.doctorId || {};
+    const treatment = appointment.treatmentId || {};
+
+    const visaLetter = {
+      letterRef: `VISA-INV-${appointment.appointmentRef}`,
+      issueDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      appointmentRef: appointment.appointmentRef,
+      embassyAddressedTo: `Embassy / High Commission of India in ${appointment.patientCountry}`,
+      subject: `Official Medical Visa Invitation Letter for Specialized Treatment of ${appointment.patientName}`,
+      hospital: {
+        name: hospital.name || 'Accredited Partner Hospital',
+        city: hospital.city || 'Delhi NCR',
+        state: hospital.state || 'India',
+        address: hospital.address || 'Medical Enclave, India',
+        accreditations: hospital.accreditations || ['NABH', 'JCI'],
+        contactPhone: hospital.contactPhone || '+91 11 4000 8000',
+        contactEmail: hospital.contactEmail || 'international@medijourney.in',
+      },
+      doctor: {
+        name: doctor.fullName || 'Consultant Specialist',
+        title: doctor.title || 'Senior Consultant',
+        specialty: doctor.specialty || 'Specialized Medicine',
+        qualifications: doctor.qualifications || 'MBBS, MS, FRCS',
+      },
+      patient: {
+        fullName: appointment.patientName,
+        country: appointment.patientCountry,
+        passportNumber: appointment.passportNumber || 'PROVIDED_AT_EMBASSY',
+        attendantsCount: appointment.attendantsCount || 1,
+      },
+      treatment: {
+        name: treatment.name || doctor.specialty || 'Specialized Clinical Consultation & Procedure',
+        recommendedStay: treatment.recoveryStayDays ? `${treatment.recoveryStayDays} Days` : '10 to 14 Days',
+      },
+      appointmentDate: appointment.appointmentDate,
+      timeSlot: appointment.timeSlot,
+      status: appointment.status,
+    };
+
+    res.json({
+      success: true,
+      visaLetter,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update flight arrival logistics for airport transfer coordination
+// @route   PATCH /api/appointments/:id/flight-logistics
+// @access  Public / Patient
+exports.updateFlightLogistics = async (req, res, next) => {
+  try {
+    const { flightNumber, airline, arrivalDateTime, pickupTerminal, attendantsCount, airportPickupRequired } = req.body;
+
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    if (flightNumber !== undefined) appointment.flightNumber = flightNumber;
+    if (airline !== undefined) appointment.airline = airline;
+    if (arrivalDateTime !== undefined) appointment.arrivalDateTime = arrivalDateTime;
+    if (pickupTerminal !== undefined) appointment.pickupTerminal = pickupTerminal;
+    if (attendantsCount !== undefined) appointment.attendantsCount = Number(attendantsCount);
+    if (airportPickupRequired !== undefined) appointment.airportPickupRequired = Boolean(airportPickupRequired);
+
+    const updated = await appointment.save();
+
+    const populated = await Appointment.findById(updated._id)
+      .populate('doctorId', 'fullName specialty qualifications avatarUrl')
+      .populate('hospitalId', 'name city airportName')
+      .populate('treatmentId', 'name');
+
+    res.json({
+      success: true,
+      message: 'Flight and arrival logistics updated successfully',
+      appointment: populated,
     });
   } catch (error) {
     next(error);

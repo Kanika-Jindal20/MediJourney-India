@@ -79,6 +79,10 @@ const appointmentSchema = new mongoose.Schema(
         fileName: String,
         fileUrl: String,
         fileType: String,
+        category: {
+          type: String,
+          default: 'Diagnostic Report',
+        },
         uploadedAt: {
           type: Date,
           default: Date.now,
@@ -96,6 +100,26 @@ const appointmentSchema = new mongoose.Schema(
     airportPickupRequired: {
       type: Boolean,
       default: false,
+    },
+    flightNumber: {
+      type: String,
+      default: '',
+    },
+    airline: {
+      type: String,
+      default: '',
+    },
+    arrivalDateTime: {
+      type: String,
+      default: '',
+    },
+    pickupTerminal: {
+      type: String,
+      default: '',
+    },
+    attendantsCount: {
+      type: Number,
+      default: 0,
     },
     proposedDate: {
       type: String,
