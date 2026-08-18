@@ -4,4 +4,13 @@ export const aiService = {
   getDiscoveryRecommendations: async (queryData) => {
     return await api.post('/ai/discovery', queryData);
   },
+
+  generateItinerary: async (itineraryData) => {
+    return await api.post('/ai/itinerary', itineraryData);
+  },
+
+  sendChatMessage: async (chatData) => {
+    return await api.post('/ai/chat', chatData);
+  },
 };
+
