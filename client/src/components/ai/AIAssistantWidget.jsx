@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { aiService } from '../../services/aiService';
 import { useCurrency } from '../../context/CurrencyContext';
 import { Modal } from '../common/Modal';
@@ -15,12 +16,16 @@ import {
   ShieldCheck,
   CheckCircle2,
   Compass,
+  Wallet,
+  Activity,
+  Layers,
 } from 'lucide-react';
 
 export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHospital }) => {
   const { formatPrice } = useCurrency();
   const [query, setQuery] = useState('');
   const [preferredCity, setPreferredCity] = useState('All');
+  const [budgetUSD, setBudgetUSD] = useState('any');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -31,6 +36,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
     'Affordable IVF cycle with high success rate and embryo testing',
     'Robotic knee replacement surgery cost vs USA / UK',
     'Heart bypass CABG surgery at top accredited cardiology hospital',
+    'CyberKnife radiosurgery for targeted cancer treatment in Mumbai',
   ];
 
   const handleSearch = async (queryText = query) => {
@@ -41,6 +47,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
       const res = await aiService.getDiscoveryRecommendations({
         query: queryText,
         preferredCity,
+        budgetUSD: budgetUSD !== 'any' ? Number(budgetUSD) : undefined,
       });
       setResult(res);
     } catch (err) {
@@ -59,16 +66,16 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
     >
       <div className="space-y-6">
         {/* Intro */}
-        <div className="bg-gradient-to-r from-teal-900 to-navy-950 text-white rounded-2xl p-5 shadow-lg border border-teal-500/30">
+        <div className="bg-gradient-to-r from-teal-900 via-slate-900 to-navy-950 text-white rounded-2xl p-5 shadow-lg border border-teal-500/30">
           <div className="flex items-center gap-2 text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
             <Sparkles className="w-4 h-4 text-teal-400 animate-pulse" />
-            AI Clinical Matcher
+            AI Clinical Matcher & Savings Engine
           </div>
           <h4 className="text-xl font-display font-bold">
             Describe your condition, desired treatment or budget
           </h4>
           <p className="text-slate-300 text-xs mt-1 leading-relaxed">
-            Our AI analyzes your clinical inquiry, compares accredited Indian medical centers, calculates estimated savings vs Western hospital rates, and recommends top specialist doctors.
+            Our AI engine maps your symptoms to specialized departments, scans JCI/NABH accredited hospital facilities, calculates savings vs Western hospitals, and recommends verified specialists.
           </p>
 
           {/* Quick chips */}
@@ -88,7 +95,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
           </div>
         </div>
 
-        {/* Input Bar */}
+        {/* Input & Filter Bar */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -96,21 +103,21 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
           }}
           className="space-y-3"
         >
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="e.g. Need high graft hair transplant or dental makeover in Mumbai..."
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-4 pr-10 py-3 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
-              />
-            </div>
+          <div className="relative">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g. Need robotic knee replacement or dental implants under $3,000..."
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-4 pr-10 py-3 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+            />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <select
               value={preferredCity}
               onChange={(e) => setPreferredCity(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-3 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
             >
               <option value="All">All Medical Hubs (Pan-India)</option>
               <option value="Delhi NCR">Delhi NCR & Gurugram</option>
@@ -121,13 +128,24 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
               <option value="Kochi">Kochi (Kerala)</option>
             </select>
 
+            <select
+              value={budgetUSD}
+              onChange={(e) => setBudgetUSD(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+            >
+              <option value="any">Any Budget Tier</option>
+              <option value="2500">Under $2,500 (Dental / Hair / Minor)</option>
+              <option value="6000">$2,500 - $6,000 (Joints / IVF / Cosmetic)</option>
+              <option value="12000">$6,000 - $12,000 (Cardiology / Oncology)</option>
+            </select>
+
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition disabled:opacity-50"
+              className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition disabled:opacity-50"
             >
               {loading ? <Spinner size="sm" /> : <Send className="w-3.5 h-3.5" />}
-              <span>Analyze</span>
+              <span>Analyze & Match</span>
             </button>
           </div>
         </form>
@@ -175,6 +193,36 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
               </ul>
             </div>
 
+            {/* Recommended Treatments */}
+            {result.recommendedTreatments?.length > 0 && (
+              <div>
+                <h5 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Activity className="w-4 h-4 text-teal-600" />
+                  Matched Procedure Guides
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {result.recommendedTreatments.map((t) => (
+                    <div
+                      key={t._id}
+                      className="bg-white border border-slate-200 hover:border-teal-400 rounded-xl p-3 shadow-xs flex items-center justify-between gap-3 transition"
+                    >
+                      <div>
+                        <div className="font-bold text-slate-800 text-xs">{t.name}</div>
+                        <div className="text-[11px] text-teal-700 font-semibold">{formatPrice(t.costIndiaUSD)}</div>
+                      </div>
+                      <Link
+                        to={`/treatments/${t.slug}`}
+                        onClick={onClose}
+                        className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-lg text-xs font-semibold shrink-0 transition"
+                      >
+                        View Guide
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Recommended Doctors */}
             {result.recommendedDoctors?.length > 0 && (
               <div>
@@ -207,7 +255,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
                           onClose();
                           if (onSelectDoctor) onSelectDoctor(doc);
                         }}
-                        className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-lg text-xs font-semibold shrink-0 transition"
+                        className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shrink-0 transition shadow-xs"
                       >
                         Book
                       </button>

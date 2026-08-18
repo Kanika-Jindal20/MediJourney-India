@@ -1,13 +1,14 @@
 const Hospital = require('../models/Hospital');
 const Doctor = require('../models/Doctor');
 const Review = require('../models/Review');
+const Treatment = require('../models/Treatment');
 
-// @desc    Get all hospitals with filtering & search
+// @desc    Get all hospitals with filtering, searching & sorting
 // @route   GET /api/hospitals
 // @access  Public
 exports.getHospitals = async (req, res, next) => {
   try {
-    const { city, specialty, accreditation, search, minRating, isFeatured } = req.query;
+    const { city, specialty, accreditation, search, minRating, isFeatured, facility, sortBy } = req.query;
     let query = {};
 
     if (city && city !== 'All') {
@@ -30,17 +31,44 @@ exports.getHospitals = async (req, res, next) => {
       query.isFeatured = true;
     }
 
+    if (facility && facility !== 'All') {
+      const facilityRegex = new RegExp(facility, 'i');
+      query.$or = [
+        { internationalServices: { $in: [facilityRegex] } },
+        { facilities: { $in: [facilityRegex] } },
+      ];
+    }
+
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      query.$or = [
+      const searchOr = [
         { name: searchRegex },
         { city: searchRegex },
         { description: searchRegex },
         { specialties: searchRegex },
+        { 'internationalServices': searchRegex },
       ];
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: searchOr }];
+        delete query.$or;
+      } else {
+        query.$or = searchOr;
+      }
     }
 
-    const hospitals = await Hospital.find(query).sort({ rating: -1, isFeatured: -1 });
+    // Determine sort ordering
+    let sortOptions = { rating: -1, isFeatured: -1 };
+    if (sortBy === 'airportDistanceKm') {
+      sortOptions = { airportDistanceKm: 1, rating: -1 };
+    } else if (sortBy === 'bedsCount') {
+      sortOptions = { bedsCount: -1, rating: -1 };
+    } else if (sortBy === 'name') {
+      sortOptions = { name: 1 };
+    } else if (sortBy === 'establishedYear') {
+      sortOptions = { establishedYear: 1 };
+    }
+
+    const hospitals = await Hospital.find(query).sort(sortOptions);
 
     res.json({
       success: true,
@@ -52,7 +80,7 @@ exports.getHospitals = async (req, res, next) => {
   }
 };
 
-// @desc    Get single hospital by ID or Slug with doctors and reviews
+// @desc    Get single hospital by ID or Slug with doctors, reviews, and matching treatments
 // @route   GET /api/hospitals/:idOrSlug
 // @access  Public
 exports.getHospital = async (req, res, next) => {
@@ -76,11 +104,21 @@ exports.getHospital = async (req, res, next) => {
     // Fetch reviews
     const reviews = await Review.find({ hospitalId: hospital._id }).sort({ createdAt: -1 });
 
+    // Fetch available treatment packages matching hospital specialties
+    const specialtyKeywords = (hospital.specialties || []).map((s) => s.split(' ')[0]);
+    const treatments = await Treatment.find({
+      $or: [
+        { category: { $in: hospital.specialties } },
+        { category: { $in: specialtyKeywords.map((k) => new RegExp(k, 'i')) } },
+      ],
+    }).limit(6);
+
     res.json({
       success: true,
       hospital,
       doctors,
       reviews,
+      treatments,
     });
   } catch (error) {
     next(error);
