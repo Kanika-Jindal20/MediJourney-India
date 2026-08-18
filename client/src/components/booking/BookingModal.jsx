@@ -20,6 +20,8 @@ import {
   User,
   Phone,
   Mail,
+  CalendarPlus,
+  Download,
 } from 'lucide-react';
 
 export const BookingModal = ({
@@ -34,6 +36,7 @@ export const BookingModal = ({
   const [loading, setLoading] = useState(false);
   const [submittedAppt, setSubmittedAppt] = useState(null);
   const [error, setError] = useState('');
+  const [showFlightSection, setShowFlightSection] = useState(false);
 
   // Form states
   const [doctorsList, setDoctorsList] = useState([]);
@@ -55,9 +58,14 @@ export const BookingModal = ({
     slotId: '',
     consultationType: 'teleconsultation',
     symptomsDescription: '',
+    reportCategory: 'Diagnostic Scan (MRI/CT/X-Ray)',
     preferredLanguage: 'English',
     visaAssistanceRequired: true,
     airportPickupRequired: true,
+    flightNumber: '',
+    airline: '',
+    arrivalDateTime: '',
+    attendantsCount: 0,
   });
 
   const [files, setFiles] = useState([]);
@@ -270,10 +278,53 @@ export const BookingModal = ({
             </ul>
           </div>
 
-          <div className="flex gap-3 justify-center pt-2">
+          {/* Calendar Sync & Confirmation Controls */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <a
+              href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+                `MediJourney India Consultation - ${submittedAppt.appointmentRef}`
+              )}&dates=${submittedAppt.appointmentDate?.replace(/-/g, '')}T100000Z/${submittedAppt.appointmentDate?.replace(
+                /-/g,
+                ''
+              )}T110000Z&details=${encodeURIComponent(
+                `Reference: ${submittedAppt.appointmentRef}\nPatient: ${submittedAppt.patientName}\nMode: ${submittedAppt.consultationType}`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-semibold text-xs border border-slate-300 flex items-center gap-1.5 transition shadow-xs"
+            >
+              <CalendarPlus className="w-3.5 h-3.5 text-teal-600" />
+              <span>Add to Google Calendar</span>
+            </a>
+
+            <button
+              onClick={() => {
+                const ics = [
+                  'BEGIN:VCALENDAR',
+                  'VERSION:2.0',
+                  'BEGIN:VEVENT',
+                  `SUMMARY:MediJourney India Consultation - ${submittedAppt.appointmentRef}`,
+                  `DTSTART:${submittedAppt.appointmentDate?.replace(/-/g, '')}T053000Z`,
+                  `DTEND:${submittedAppt.appointmentDate?.replace(/-/g, '')}T063000Z`,
+                  `DESCRIPTION:Booking Ref: ${submittedAppt.appointmentRef}\\nPatient: ${submittedAppt.patientName}`,
+                  'END:VEVENT',
+                  'END:VCALENDAR',
+                ].join('\r\n');
+                const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', `MediJourney_${submittedAppt.appointmentRef}.ics`);
+                link.click();
+              }}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-semibold text-xs border border-slate-300 flex items-center gap-1.5 transition shadow-xs"
+            >
+              <Download className="w-3.5 h-3.5 text-teal-600" />
+              <span>Download .ICS Event</span>
+            </button>
+
             <button
               onClick={onClose}
-              className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-sm shadow-md transition"
+              className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold text-xs shadow-md transition"
             >
               Done & Return to Platform
             </button>
@@ -499,40 +550,71 @@ export const BookingModal = ({
           </div>
 
           {/* File Upload for Medical Scans */}
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-700 mb-1 flex items-center gap-1">
-              <Upload className="w-3.5 h-3.5 text-teal-600" />
-              Upload Medical Reports / X-Rays / MRI Scans (Optional)
-            </label>
-            <div className="border-2 border-dashed border-slate-300 hover:border-teal-400 rounded-xl p-3 text-center transition bg-slate-50/50">
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload-booking"
-              />
-              <label
-                htmlFor="file-upload-booking"
-                className="cursor-pointer flex flex-col items-center justify-center gap-1"
-              >
-                <FileText className="w-6 h-6 text-slate-400" />
-                <span className="text-xs font-semibold text-teal-700">
-                  {files.length > 0
-                    ? `${files.length} file(s) selected`
-                    : 'Click to browse files (PDF, JPG, PNG, DOCX)'}
-                </span>
-                <span className="text-[10px] text-slate-400">Max size 10MB per file</span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-semibold text-slate-700 flex items-center gap-1">
+                <Upload className="w-3.5 h-3.5 text-teal-600" />
+                Upload Medical Reports / X-Rays / MRI Scans (Optional)
               </label>
+              <span className="text-[10px] text-slate-400">HIPAA & DISHA Compliant</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="sm:col-span-1">
+                <label className="block text-[10px] font-medium text-slate-500 mb-0.5">Report Category</label>
+                <select
+                  value={formData.reportCategory}
+                  onChange={(e) => setFormData({ ...formData, reportCategory: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                >
+                  <option value="Diagnostic Scan (MRI/CT/X-Ray)">Diagnostic Scan (MRI/CT/X-Ray)</option>
+                  <option value="Pathology & Blood Tests">Pathology & Blood Tests</option>
+                  <option value="Clinical Summary & Prescription">Clinical Summary & Prescription</option>
+                  <option value="Dental OPG X-Ray">Dental OPG X-Ray</option>
+                  <option value="Discharge Summary">Discharge Summary</option>
+                  <option value="Other Medical Document">Other Medical Document</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2 border-2 border-dashed border-slate-300 hover:border-teal-400 rounded-xl p-2.5 text-center transition bg-slate-50/50 flex items-center justify-center">
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="file-upload-booking"
+                />
+                <label
+                  htmlFor="file-upload-booking"
+                  className="cursor-pointer flex flex-col items-center justify-center gap-0.5"
+                >
+                  <span className="text-xs font-semibold text-teal-700">
+                    {files.length > 0
+                      ? `${files.length} file(s) selected (${formData.reportCategory})`
+                      : '+ Choose Scans / PDF Reports to Attach'}
+                  </span>
+                  <span className="text-[10px] text-slate-400">Max size 10MB per file • Encrypted</span>
+                </label>
+              </div>
             </div>
           </div>
 
           {/* Section 5: Medical Tourism Assistance Add-ons */}
-          <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3 space-y-2">
-            <div className="text-[11px] font-bold text-amber-900 flex items-center gap-1">
-              <Plane className="w-3.5 h-3.5 text-amber-700" />
-              Complimentary Medical Travel Logistics Assistance:
+          <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3 space-y-3">
+            <div className="text-[11px] font-bold text-amber-900 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Plane className="w-3.5 h-3.5 text-amber-700" />
+                Complimentary Medical Travel Logistics Assistance:
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowFlightSection(!showFlightSection)}
+                className="text-[11px] text-teal-700 hover:underline font-semibold"
+              >
+                {showFlightSection ? '- Hide Flight Details' : '+ Add Flight / Arrival Info (Optional)'}
+              </button>
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <label className="flex items-center gap-2 cursor-pointer text-slate-800">
                 <input
@@ -557,6 +639,53 @@ export const BookingModal = ({
                 <span>Request Airport Transfer & Dedicated Translator</span>
               </label>
             </div>
+
+            {/* Optional Flight Details Subsection */}
+            {showFlightSection && (
+              <div className="pt-2 border-t border-amber-200/60 grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-600 mb-0.5">Airline</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Emirates / British Airways"
+                    value={formData.airline}
+                    onChange={(e) => setFormData({ ...formData, airline: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-600 mb-0.5">Flight Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. EK-512"
+                    value={formData.flightNumber}
+                    onChange={(e) => setFormData({ ...formData, flightNumber: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500 focus:outline-none uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-600 mb-0.5">Arrival Date & Time</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Oct 12, 06:30 AM"
+                    value={formData.arrivalDateTime}
+                    onChange={(e) => setFormData({ ...formData, arrivalDateTime: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-600 mb-0.5">Attendants Count</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="4"
+                    value={formData.attendantsCount}
+                    onChange={(e) => setFormData({ ...formData, attendantsCount: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Form Actions */}

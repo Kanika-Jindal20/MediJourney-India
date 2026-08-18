@@ -222,7 +222,79 @@ export const HomePage = ({ onOpenAI }) => {
         </div>
       </section>
 
-      {/* 2. SPECIALTY CATEGORIES GRID */}
+      {/* 2. THREE-STEP DISCOVERY WIZARD */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <span className="text-[11px] font-bold text-teal-700 uppercase tracking-widest flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-teal-600" />
+                Intelligent Medical Pathway Finder
+              </span>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-0.5">
+                Find Your Treatment Package & Accredited Center in 3 Clicks
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to="/compare?tab=treatments"
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Compare Procedures</span>
+              </Link>
+              <Link
+                to="/compare?tab=hospitals"
+                className="px-3.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-xl text-xs font-semibold transition flex items-center gap-1 border border-teal-200"
+              >
+                <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                <span>Compare Hospitals</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+              <div className="w-7 h-7 rounded-lg bg-teal-600 text-white font-bold text-xs flex items-center justify-center">1</div>
+              <h4 className="font-bold text-slate-900 text-xs">Choose Clinical Specialty</h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Cardiology, Orthopedic joint replacement, IVF, Dental implants, Hair restoration, or Ayurveda.
+              </p>
+              <Link to="/treatments" className="text-xs font-bold text-teal-700 hover:underline block pt-1">
+                Browse 30+ Procedures →
+              </Link>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+              <div className="w-7 h-7 rounded-lg bg-teal-600 text-white font-bold text-xs flex items-center justify-center">2</div>
+              <h4 className="font-bold text-slate-900 text-xs">Select Hospital & Surgeon</h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Filter by airport distance, JCI accreditation, bed count, and multi-lingual translator support.
+              </p>
+              <Link to="/hospitals" className="text-xs font-bold text-teal-700 hover:underline block pt-1">
+                Explore 50+ Hospitals →
+              </Link>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+              <div className="w-7 h-7 rounded-lg bg-teal-600 text-white font-bold text-xs flex items-center justify-center">3</div>
+              <h4 className="font-bold text-slate-900 text-xs">Instant Teleconsult & Visa</h4>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Get an official hospital quotation and 60-day e-Medical Visa Invitation Letter within 24 hours.
+              </p>
+              <button
+                onClick={() => onOpenAI && onOpenAI()}
+                className="text-xs font-bold text-teal-700 hover:underline block pt-1 text-left"
+              >
+                Launch AI Assistant →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. SPECIALTY CATEGORIES GRID */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
           <div>

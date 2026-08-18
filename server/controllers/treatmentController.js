@@ -2,12 +2,12 @@ const Treatment = require('../models/Treatment');
 const Doctor = require('../models/Doctor');
 const Hospital = require('../models/Hospital');
 
-// @desc    Get all treatments with category filtering & search
+// @desc    Get all treatments with category filtering, search, stay duration & sorting
 // @route   GET /api/treatments
 // @access  Public
 exports.getTreatments = async (req, res, next) => {
   try {
-    const { category, search, isPopular } = req.query;
+    const { category, search, isPopular, sortBy, maxCost, stayDuration } = req.query;
     let query = {};
 
     if (category && category !== 'All') {
@@ -16,6 +16,20 @@ exports.getTreatments = async (req, res, next) => {
 
     if (isPopular === 'true') {
       query.isPopular = true;
+    }
+
+    if (maxCost) {
+      query.costIndiaUSD = { $lte: Number(maxCost) };
+    }
+
+    if (stayDuration) {
+      if (stayDuration === '1-3') {
+        query.avgStayDays = { $lte: 3 };
+      } else if (stayDuration === '4-7') {
+        query.avgStayDays = { $gte: 4, $lte: 7 };
+      } else if (stayDuration === '8+') {
+        query.avgStayDays = { $gte: 8 };
+      }
     }
 
     if (search) {
@@ -28,7 +42,18 @@ exports.getTreatments = async (req, res, next) => {
       ];
     }
 
-    const treatments = await Treatment.find(query).sort({ isPopular: -1, costIndiaUSD: 1 });
+    let sortOptions = { isPopular: -1, costIndiaUSD: 1 };
+    if (sortBy === 'costAsc') {
+      sortOptions = { costIndiaUSD: 1 };
+    } else if (sortBy === 'costDesc') {
+      sortOptions = { costIndiaUSD: -1 };
+    } else if (sortBy === 'recoveryAsc') {
+      sortOptions = { avgRecoveryDays: 1, avgStayDays: 1 };
+    } else if (sortBy === 'name') {
+      sortOptions = { name: 1 };
+    }
+
+    const treatments = await Treatment.find(query).sort(sortOptions);
 
     res.json({
       success: true,

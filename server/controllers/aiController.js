@@ -19,6 +19,31 @@ exports.aiDiscovery = async (req, res, next) => {
     let detectedCategory = 'Cosmetic & Plastic Surgery';
     let urgencyLevel = 'Elective / Standard Planning';
     let keyFindings = [];
+    
+    if (lowerQuery.includes('tooth') || lowerQuery.includes('teeth') || lowerQuery.includes('dental') || lowerQuery.includes('implant') || lowerQuery.includes('veneer') || lowerQuery.includes('smile') || lowerQuery.includes('crown') || lowerQuery.includes('dentist')) {
+      detectedCategory = 'Dental Treatments';
+      detectedKeywords = ['All-on-4', 'Dental Implants', 'Zirconia Crowns', 'Veneers'];
+    } else if (lowerQuery.includes('hair') || lowerQuery.includes('bald') || lowerQuery.includes('graft') || (lowerQuery.includes('transplant') && !lowerQuery.includes('kidney') && !lowerQuery.includes('liver') && !lowerQuery.includes('heart') && !lowerQuery.includes('bone marrow')) || lowerQuery.includes('follicle') || lowerQuery.includes('alopecia')) {
+      detectedCategory = 'Hair Restoration';
+      detectedKeywords = ['DHT Hair Transplant', 'FUE Grafts', 'Hairline Design'];
+    } else if (lowerQuery.includes('baby') || lowerQuery.includes('ivf') || lowerQuery.includes('fertility') || lowerQuery.includes('pregnant') || lowerQuery.includes('infertility') || lowerQuery.includes('icsi') || lowerQuery.includes('embryo') || lowerQuery.includes('egg freezing')) {
+      detectedCategory = 'Fertility & IVF Care';
+      detectedKeywords = ['IVF Cycle', 'ICSI', 'PGT-A Genetics', 'Embryo Transfer'];
+    } else if (lowerQuery.includes('heart') || lowerQuery.includes('cardio') || lowerQuery.includes('bypass') || lowerQuery.includes('valve') || lowerQuery.includes('chest pain') || lowerQuery.includes('angioplasty') || lowerQuery.includes('cabg') || lowerQuery.includes('stent')) {
+      detectedCategory = 'Cardiology & Heart Surgery';
+      detectedKeywords = ['Beating Heart CABG', 'Valve Replacement', 'Robotic Cardiology'];
+    } else if (lowerQuery.includes('knee') || lowerQuery.includes('hip') || lowerQuery.includes('joint') || lowerQuery.includes('bone') || lowerQuery.includes('spine') || lowerQuery.includes('ortho') || lowerQuery.includes('arthritis') || lowerQuery.includes('ligament') || lowerQuery.includes('acl')) {
+      detectedCategory = 'Orthopedics & Joint Replacement';
+      detectedKeywords = ['Robotic Knee Replacement', 'Hip Arthroplasty', 'Spine Surgery'];
+    } else if (lowerQuery.includes('cancer') || lowerQuery.includes('tumor') || lowerQuery.includes('chemo') || lowerQuery.includes('radiation') || lowerQuery.includes('oncology') || lowerQuery.includes('cyberknife') || lowerQuery.includes('proton') || lowerQuery.includes('carcinoma')) {
+      detectedCategory = 'Oncology & Cancer Care';
+      detectedKeywords = ['CyberKnife Radiosurgery', 'Proton Beam', 'Targeted Immunotherapy'];
+    } else if (lowerQuery.includes('ayurveda') || lowerQuery.includes('wellness') || lowerQuery.includes('detox') || lowerQuery.includes('panchakarma') || lowerQuery.includes('herbal') || lowerQuery.includes('rejuvenation') || lowerQuery.includes('kerala')) {
+      detectedCategory = 'Ayurveda & Wellness';
+      detectedKeywords = ['Panchakarma Detox', 'Abhyanga Therapy', 'Holistic Healing'];
+    } else if (lowerQuery.includes('nose') || lowerQuery.includes('rhinoplasty') || lowerQuery.includes('face') || lowerQuery.includes('liposuction') || lowerQuery.includes('breast') || lowerQuery.includes('tummy') || lowerQuery.includes('cosmetic') || lowerQuery.includes('plastic') || lowerQuery.includes('facelift')) {
+      detectedCategory = 'Cosmetic & Plastic Surgery';
+      detectedKeywords = ['Rhinoplasty', 'Facelift', 'Body Contouring', 'Blepharoplasty'];
 
     if (
       lowerQuery.includes('tooth') ||
@@ -133,6 +158,7 @@ exports.aiDiscovery = async (req, res, next) => {
     ) {
       detectedCategory = 'Ayurveda & Wellness';
       keyFindings = ['Ayurvedic Pulse Diagnosis (Nadi Pariksha) by certified Vaidyas', 'Authentic medicated herbal Abhyanga & Shirodhara', 'Kerala waterfront post-surgical organic rejuvenation'];
+ main
     }
 
     // Find relevant treatments
