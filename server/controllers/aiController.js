@@ -133,7 +133,6 @@ exports.aiDiscovery = async (req, res, next) => {
     ) {
       detectedCategory = 'Ayurveda & Wellness';
       keyFindings = ['Ayurvedic Pulse Diagnosis (Nadi Pariksha) by certified Vaidyas', 'Authentic medicated herbal Abhyanga & Shirodhara', 'Kerala waterfront post-surgical organic rejuvenation'];
- main
     }
 
     // Find relevant treatments
