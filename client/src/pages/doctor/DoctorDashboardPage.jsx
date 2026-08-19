@@ -6,6 +6,7 @@ import { appointmentService } from '../../services/appointmentService';
 import { useCurrency } from '../../context/CurrencyContext';
 import { Spinner, Alert } from '../../components/common/Alert';
 import { Modal } from '../../components/common/Modal';
+import { DoctorPatientCommunicator } from '../../components/doctor/DoctorPatientCommunicator';
 import {
   Stethoscope,
   Calendar,
@@ -81,6 +82,7 @@ export const DoctorDashboardPage = () => {
   const [rescheduleReason, setRescheduleReason] = useState('');
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [copiedRoomLink, setCopiedRoomLink] = useState(false);
+  const [outreachAppt, setOutreachAppt] = useState(null);
 
   // E-Prescription & Pre-Op Diagnostics State
   const [rxMedicines, setRxMedicines] = useState([
@@ -807,13 +809,24 @@ export const DoctorDashboardPage = () => {
 
                     {/* Action */}
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => handleOpenDossier(appt)}
-                        className="px-3.5 py-1.5 bg-slate-900 hover:bg-teal-700 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center gap-1.5 ml-auto"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Review Case</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setOutreachAppt(appt)}
+                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl font-bold text-xs shadow-2xs transition flex items-center gap-1"
+                          title="Direct WhatsApp & Email Clinical Outreach"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Outreach</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleOpenDossier(appt)}
+                          className="px-3.5 py-1.5 bg-slate-900 hover:bg-teal-700 text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center gap-1.5"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Review Case</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1675,6 +1688,14 @@ export const DoctorDashboardPage = () => {
           </form>
         </Modal>
       )}
+
+      {/* 7. Doctor Direct Patient Outreach & WhatsApp Communicator Modal */}
+      <DoctorPatientCommunicator
+        appointment={outreachAppt}
+        doctor={doctorProfile}
+        isOpen={!!outreachAppt}
+        onClose={() => setOutreachAppt(null)}
+      />
     </div>
   );
 };
