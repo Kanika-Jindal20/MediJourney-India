@@ -1,30 +1,52 @@
 const mongoose = require('mongoose');
 
-let mongod = null;
+let cachedConnection = null;
 
 const connectDB = async () => {
-  const primaryUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/medijourney';
-  
+  if (cachedConnection && mongoose.connection.readyState >= 1) {
+    return cachedConnection;
+  }
+
+  const primaryUri = process.env.MONGO_URI;
+
+  if (!primaryUri) {
+    console.warn('[Database] WARNING: MONGO_URI environment variable is not defined!');
+  }
+
+  const uri = primaryUri || 'mongodb://127.0.0.1:27017/medijourney';
+
   try {
-    // Attempt connecting to local/remote MongoDB with a short timeout
-    await mongoose.connect(primaryUri, {
-      serverSelectionTimeoutMS: 3000,
-    });
-    console.log(`[Database] Successfully connected to MongoDB at: ${primaryUri}`);
-  } catch (err) {
-    console.warn(`[Database] Direct MongoDB connection failed (${err.message}). Starting resilient In-Memory MongoDB Server for seamless zero-setup execution...`);
+    const opts = {
+      serverSelectionTimeoutMS: 5000,
+      bufferCommands: false,
+    };
     
-    try {
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      mongod = await MongoMemoryServer.create();
-      const memUri = mongod.getUri();
-      
-      await mongoose.connect(memUri);
-      console.log(`[Database] In-Memory MongoDB Server active and connected at: ${memUri}`);
-    } catch (memErr) {
-      console.error('[Database] Fatal: Unable to initialize MongoDB fallback:', memErr);
-      process.exit(1);
+    console.log(`[Database] Connecting to MongoDB...`);
+    const conn = await mongoose.connect(uri, opts);
+    cachedConnection = conn;
+    console.log(`[Database] Successfully connected to MongoDB: ${conn.connection.host}`);
+    return conn;
+  } catch (err) {
+    console.error(`[Database] Direct MongoDB connection failed: ${err.message}`);
+
+    // If running in local development (not Vercel) and no Atlas, attempt MongoMemoryServer
+    if (!process.env.VERCEL && !process.env.MONGO_URI) {
+      try {
+        console.log('[Database] Starting In-Memory MongoDB Server for local development...');
+        const { MongoMemoryServer } = require('mongodb-memory-server');
+        const mongod = await MongoMemoryServer.create();
+        const memUri = mongod.getUri();
+        const conn = await mongoose.connect(memUri);
+        cachedConnection = conn;
+        console.log(`[Database] In-Memory MongoDB connected at: ${memUri}`);
+        return conn;
+      } catch (memErr) {
+        console.error('[Database] In-Memory MongoDB fallback failed:', memErr.message);
+      }
     }
+    
+    // In serverless / production, rethrow so the route/middleware can handle it cleanly without crashing the container
+    throw err;
   }
 };
 

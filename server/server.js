@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -21,42 +22,91 @@ const seedAllData = require('./seed/seedData');
 const app = express();
 
 // Body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Enable CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   })
 );
 
-// Database connection middleware for Serverless & Long-running
+// Database connection state
 let isConnected = false;
+let isSeeding = false;
+
 const ensureDB = async () => {
-  if (!isConnected) {
-    await connectDB();
-    try {
-      const hospitalCount = await Hospital.countDocuments();
-      if (hospitalCount === 0) {
-        console.log('[Server] Database is empty. Auto-seeding initial medical tourism catalog...');
-        await seedAllData();
-      }
-    } catch (e) {
-      console.warn('[Server] Auto-seed check notice:', e.message);
-    }
-    isConnected = true;
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return;
+  }
+  await connectDB();
+  isConnected = true;
+
+  // Asynchronously seed initial data if collection is empty
+  if (!isSeeding) {
+    isSeeding = true;
+    Hospital.countDocuments()
+      .then(async (count) => {
+        if (count === 0) {
+          console.log('[Server] Database is empty. Auto-seeding initial medical tourism catalog...');
+          await seedAllData();
+        }
+      })
+      .catch((err) => console.warn('[Server] Seed check error:', err.message))
+      .finally(() => {
+        isSeeding = false;
+      });
   }
 };
 
+// Health check endpoint (always accessible for diagnosis)
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  let dbError = null;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      dbStatus = 'connected';
+    } else {
+      await connectDB();
+      dbStatus = 'connected';
+    }
+  } catch (err) {
+    dbStatus = 'error';
+    dbError = err.message;
+  }
+
+  res.json({
+    status: dbStatus === 'connected' ? 'online' : 'degraded',
+    platform: 'MediJourney India - Integrated Digital Platform for International Patients',
+    database: {
+      status: dbStatus,
+      host: mongoose.connection?.host || null,
+      mongoUriProvided: Boolean(process.env.MONGO_URI),
+      error: dbError,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Middleware to ensure DB connection on all API routes
 app.use(async (req, res, next) => {
+  if (req.path === '/api/health' || req.path === '/health') {
+    return next();
+  }
   try {
     await ensureDB();
     next();
   } catch (err) {
-    next(err);
+    console.error('[API Error] Database connection error:', err.message);
+    return res.status(503).json({
+      success: false,
+      message: 'Database temporarily unavailable. Please verify MONGO_URI in Vercel environment variables and Atlas IP whitelist.',
+      error: err.message,
+    });
   }
 });
 
@@ -73,21 +123,12 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/travel', travelRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'online',
-    platform: 'MediJourney India - Integrated Digital Platform for International Patients',
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // Centralized error handler
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// If running directly (e.g. node server.js locally)
+// Standalone execution for local development
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`========================================================`);
