@@ -3,6 +3,9 @@
 [![Smart India Hackathon 2026](https://img.shields.io/badge/SIH-2026-teal.svg)](https://sih.gov.in/)
 [![Theme](https://img.shields.io/badge/Theme-Healthcare%20%2F%20Travel%20%26%20Tourism-blue.svg)]()
 [![Stack](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20Express%20%7C%20MongoDB%20%7C%20TailwindCSS-emerald.svg)]()
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-medi--journey--india.vercel.app-00DC82?style=flat&logo=vercel&logoColor=white)](https://medi-journey-india.vercel.app)
+
+🚀 **Live Deployment URL**: **[https://medi-journey-india.vercel.app](https://medi-journey-india.vercel.app)**
 
 > **SIH 2026 Problem Statement**: Development of an Integrated Digital Platform for International Patients Seeking Medical Treatment in India.
 
