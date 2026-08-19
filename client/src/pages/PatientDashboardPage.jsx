@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { appointmentService } from '../services/appointmentService';
+import { authService } from '../services/authService';
 import { useCurrency } from '../context/CurrencyContext';
 import { Spinner, Alert } from '../components/common/Alert';
 import { Modal } from '../components/common/Modal';
@@ -31,6 +32,12 @@ import {
   Mail,
   Globe,
   Share2,
+  Copy,
+  ClipboardCheck,
+  Pencil,
+  Save,
+  BarChart3,
+  NotebookText,
 } from 'lucide-react';
 
 export const PatientDashboardPage = () => {
@@ -71,6 +78,22 @@ export const PatientDashboardPage = () => {
 
   // Status update (patient cancel / accept reschedule)
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Profile edit panel state
+  const [profilePanelOpen, setProfilePanelOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    fullName: user?.fullName || '',
+    phone: user?.phone || '',
+    country: user?.country || '',
+    passportNumber: user?.passportNumber || '',
+    preferredLanguage: user?.preferredLanguage || 'English',
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileError, setProfileError] = useState('');
+
+  // Clipboard copy state for appointment ref
+  const [copiedRef, setCopiedRef] = useState(false);
 
   const fetchAppointments = async (emailToUse = lookupEmail) => {
     if (!emailToUse && !user) return;
@@ -231,6 +254,34 @@ export const PatientDashboardPage = () => {
     }
   };
 
+  // Save patient profile (name, phone, country, passport, language)
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileSuccess('');
+    setProfileError('');
+    try {
+      await authService.updateProfile(profileForm);
+      setProfileSuccess('Profile updated successfully!');
+      setTimeout(() => {
+        setProfileSuccess('');
+        setProfilePanelOpen(false);
+      }, 2000);
+    } catch (err) {
+      setProfileError(err.message || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // Copy appointment reference to clipboard
+  const handleCopyRef = (ref) => {
+    navigator.clipboard.writeText(ref).then(() => {
+      setCopiedRef(true);
+      setTimeout(() => setCopiedRef(false), 2000);
+    });
+  };
+
   // Calendar sync helper
   const handleDownloadICS = (appt) => {
     if (!appt) return;
@@ -319,37 +370,195 @@ export const PatientDashboardPage = () => {
             Welcome, {user?.fullName || 'International Traveler'}
           </h1>
           <p className="text-slate-400 text-xs">
-            Manage your medical consultation requests, track hospital confirmations, access medical visa letters & coordinate airport pickup.
+            Manage your medical consultation requests, track hospital confirmations, access medical visa letters &amp; coordinate airport pickup.
           </p>
         </div>
 
-        {/* Email lookup form if guest */}
-        {!user && (
-          <form
-            onSubmit={handleLookupSubmit}
-            className="flex gap-2 bg-slate-800/90 p-1.5 rounded-xl border border-slate-700 text-xs"
-          >
-            <input
-              type="email"
-              placeholder="Enter your booking email..."
-              value={lookupEmail}
-              onChange={(e) => setLookupEmail(e.target.value)}
-              className="bg-transparent px-3 py-1.5 text-white focus:outline-none placeholder:text-slate-400 text-xs"
-              required
-            />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Edit Profile Button (only for logged-in patients) */}
+          {user && (
             <button
-              type="submit"
-              className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold"
+              onClick={() => {
+                setProfilePanelOpen(!profilePanelOpen);
+                setProfileForm({
+                  fullName: user?.fullName || '',
+                  phone: user?.phone || '',
+                  country: user?.country || '',
+                  passportNumber: user?.passportNumber || '',
+                  preferredLanguage: user?.preferredLanguage || 'English',
+                });
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white rounded-xl text-xs font-semibold transition"
             >
-              Track
+              <Pencil className="w-3.5 h-3.5 text-teal-300" />
+              Edit Profile
             </button>
-          </form>
-        )}
+          )}
+
+          {/* Email lookup form if guest */}
+          {!user && (
+            <form
+              onSubmit={handleLookupSubmit}
+              className="flex gap-2 bg-slate-800/90 p-1.5 rounded-xl border border-slate-700 text-xs"
+            >
+              <input
+                type="email"
+                placeholder="Enter your booking email..."
+                value={lookupEmail}
+                onChange={(e) => setLookupEmail(e.target.value)}
+                className="bg-transparent px-3 py-1.5 text-white focus:outline-none placeholder:text-slate-400 text-xs"
+                required
+              />
+              <button
+                type="submit"
+                className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold"
+              >
+                Track
+              </button>
+            </form>
+          )}
+        </div>
       </div>
+
+      {/* Stats Summary Bar */}
+      {appointments.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            {
+              label: 'Total Requests',
+              value: appointments.length,
+              icon: <BarChart3 className="w-4 h-4 text-slate-500" />,
+              bg: 'bg-white',
+              text: 'text-slate-800',
+            },
+            {
+              label: 'Confirmed',
+              value: appointments.filter((a) => a.status === 'confirmed').length,
+              icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" />,
+              bg: 'bg-emerald-50',
+              text: 'text-emerald-800',
+            },
+            {
+              label: 'Pending Review',
+              value: appointments.filter((a) => a.status === 'pending').length,
+              icon: <Clock className="w-4 h-4 text-amber-500" />,
+              bg: 'bg-amber-50',
+              text: 'text-amber-800',
+            },
+            {
+              label: 'Completed',
+              value: appointments.filter((a) => a.status === 'completed').length,
+              icon: <CheckCircle2 className="w-4 h-4 text-blue-500" />,
+              bg: 'bg-blue-50',
+              text: 'text-blue-800',
+            },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className={`${stat.bg} border border-slate-200 rounded-2xl p-4 flex items-center gap-3 shadow-xs`}
+            >
+              <div className="p-2 bg-white rounded-xl border border-slate-100 shadow-xs">
+                {stat.icon}
+              </div>
+              <div>
+                <div className={`text-xl font-extrabold font-display ${stat.text}`}>{stat.value}</div>
+                <div className="text-[11px] text-slate-500 font-medium">{stat.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Collapsible Profile Edit Panel */}
+      {profilePanelOpen && user && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+              <User className="w-4 h-4 text-teal-600" />
+              Edit My Profile
+            </div>
+            <button
+              onClick={() => setProfilePanelOpen(false)}
+              className="text-slate-400 hover:text-slate-700 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {profileSuccess && <Alert type="success" message={profileSuccess} />}
+          {profileError && <Alert type="error" message={profileError} />}
+
+          <form onSubmit={handleSaveProfile} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Full Name</label>
+              <input
+                type="text"
+                value={profileForm.fullName}
+                onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Phone / WhatsApp</label>
+              <input
+                type="text"
+                placeholder="+1 212 555 0100"
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Country of Residence</label>
+              <input
+                type="text"
+                placeholder="e.g. United Kingdom"
+                value={profileForm.country}
+                onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Passport Number</label>
+              <input
+                type="text"
+                placeholder="e.g. A1234567"
+                value={profileForm.passportNumber}
+                onChange={(e) => setProfileForm({ ...profileForm, passportNumber: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none uppercase"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Preferred Language</label>
+              <select
+                value={profileForm.preferredLanguage}
+                onChange={(e) => setProfileForm({ ...profileForm, preferredLanguage: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              >
+                {['English', 'Arabic', 'French', 'Russian', 'German', 'Spanish', 'Mandarin', 'Hindi'].map((lang) => (
+                  <option key={lang} value={lang}>{lang}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={savingProfile}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow-xs transition"
+              >
+                {savingProfile ? <Spinner size="sm" /> : <Save className="w-3.5 h-3.5" />}
+                {savingProfile ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {error && <Alert type="error" message={error} />}
 
       {/* Main Grid: Appointments Queue vs Appointment Detail Dossier */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Col: List of Requests */}
         <div className="space-y-4">
@@ -365,9 +574,19 @@ export const PatientDashboardPage = () => {
               <Spinner size="md" className="mx-auto" />
             </div>
           ) : appointments.length === 0 ? (
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-3 text-xs text-slate-500">
-              <Calendar className="w-8 h-8 text-slate-300 mx-auto" />
-              <p>No active consultation requests found for this account.</p>
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-4 text-xs text-slate-500">
+              <Calendar className="w-10 h-10 text-slate-300 mx-auto" />
+              <div className="space-y-1">
+                <p className="font-semibold text-slate-700 text-sm">No consultation requests yet</p>
+                <p>You haven't booked any consultations. Browse our specialists and get started.</p>
+              </div>
+              <a
+                href="/doctors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs shadow-xs transition"
+              >
+                <Stethoscope className="w-3.5 h-3.5" />
+                Browse Specialists
+              </a>
             </div>
           ) : (
             <div className="space-y-3">
@@ -419,9 +638,22 @@ export const PatientDashboardPage = () => {
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                     Case Reference Number
                   </span>
-                  <h3 className="text-2xl font-mono font-extrabold text-teal-700 mt-0.5">
-                    {selectedAppt.appointmentRef}
-                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <h3 className="text-2xl font-mono font-extrabold text-teal-700">
+                      {selectedAppt.appointmentRef}
+                    </h3>
+                    <button
+                      onClick={() => handleCopyRef(selectedAppt.appointmentRef)}
+                      title="Copy reference to clipboard"
+                      className="p-1.5 text-slate-400 hover:text-teal-600 bg-slate-50 hover:bg-teal-50 rounded-lg border border-slate-200 transition"
+                    >
+                      {copiedRef ? (
+                        <ClipboardCheck className="w-3.5 h-3.5 text-teal-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -643,6 +875,19 @@ export const PatientDashboardPage = () => {
                   </div>
                   <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-medium leading-relaxed whitespace-pre-line">
                     {selectedAppt.doctorNotes}
+                  </div>
+                </div>
+              )}
+
+              {/* 6b. Treatment Plan Summary (if doctor wrote one) */}
+              {selectedAppt.treatmentPlanSummary && (
+                <div className="space-y-2 text-xs">
+                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
+                    <NotebookText className="w-4 h-4 text-blue-600" />
+                    Proposed Treatment Plan Summary:
+                  </div>
+                  <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-950 font-medium leading-relaxed whitespace-pre-line">
+                    {selectedAppt.treatmentPlanSummary}
                   </div>
                 </div>
               )}
