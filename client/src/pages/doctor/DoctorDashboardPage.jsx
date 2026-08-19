@@ -38,6 +38,12 @@ import {
   RefreshCw,
   XCircle,
   FileCheck,
+  Pill,
+  HeartPulse,
+  FileSpreadsheet,
+  Plus,
+  Trash2,
+  ClipboardCheck,
 } from 'lucide-react';
 
 export const DoctorDashboardPage = () => {
@@ -65,7 +71,7 @@ export const DoctorDashboardPage = () => {
 
   // Active appointment dossier modal & tabs
   const [activeAppt, setActiveAppt] = useState(null);
-  const [modalTab, setModalTab] = useState('dossier'); // 'dossier', 'assessment', 'visa', 'teleconsult'
+  const [modalTab, setModalTab] = useState('dossier'); // 'dossier', 'assessment', 'visa', 'teleconsult', 'prescription'
   const [doctorNotes, setDoctorNotes] = useState('');
   const [treatmentPlanSummary, setTreatmentPlanSummary] = useState('');
   const [recommendedStayDays, setRecommendedStayDays] = useState('7');
@@ -75,6 +81,179 @@ export const DoctorDashboardPage = () => {
   const [rescheduleReason, setRescheduleReason] = useState('');
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [copiedRoomLink, setCopiedRoomLink] = useState(false);
+
+  // E-Prescription & Pre-Op Diagnostics State
+  const [rxMedicines, setRxMedicines] = useState([
+    {
+      id: '1',
+      name: 'Amoxicillin + Clavulanate (Augmentin)',
+      dosage: '625 mg',
+      frequency: '1-0-1 (Twice Daily)',
+      duration: '5 Days',
+      instructions: 'Take orally after meals',
+    },
+    {
+      id: '2',
+      name: 'Pantoprazole (Pan-40)',
+      dosage: '40 mg',
+      frequency: '1-0-0 (Morning)',
+      duration: '5 Days',
+      instructions: 'Take 30 minutes before breakfast',
+    },
+  ]);
+
+  const [patientVitals, setPatientVitals] = useState({
+    bp: '120/80 mmHg',
+    pulse: '74 bpm',
+    spo2: '99%',
+    bloodGroup: 'O Positive (O+)',
+    allergies: 'No Known Drug Allergies (NKDA)',
+  });
+
+  const [selectedTests, setSelectedTests] = useState([
+    'Complete Blood Count (CBC) & ESR',
+    'Coagulation Profile (PT/INR, APTT)',
+    '12-Lead Resting ECG & 2D Echocardiography',
+    'Viral Markers Screen (HIV, HBsAg, HCV)',
+  ]);
+
+  const availableLabTests = [
+    'Complete Blood Count (CBC) & ESR',
+    'Coagulation Profile (PT/INR, APTT)',
+    '12-Lead Resting ECG & 2D Echocardiography',
+    'Viral Markers Screen (HIV, HBsAg, HCV)',
+    'Serum Creatinine, Electrolytes & Urea',
+    'Liver Function Test (LFT) & Bilirubin',
+    'Fasting & Post-Prandial Blood Glucose (HbA1c)',
+    'Chest X-Ray (PA View)',
+    'Full Mouth 3D CBCT Radiograph Scan',
+    'Coronary CT Angiography / Cath Review',
+    'MRI / CT Scan (Focused Surgical Region)',
+  ];
+
+  // Pre-Op Protocols templates
+  const applyProtocolTemplate = (protocolType) => {
+    if (protocolType === 'cardiac') {
+      setSelectedTests([
+        'Complete Blood Count (CBC) & ESR',
+        'Coagulation Profile (PT/INR, APTT)',
+        '12-Lead Resting ECG & 2D Echocardiography',
+        'Coronary CT Angiography / Cath Review',
+        'Serum Creatinine, Electrolytes & Urea',
+        'Chest X-Ray (PA View)',
+        'Viral Markers Screen (HIV, HBsAg, HCV)',
+      ]);
+      setRxMedicines([
+        { id: 'c1', name: 'Aspirin (Ecosprin)', dosage: '75 mg', frequency: '0-1-0 (Afternoon)', duration: 'Till Admission', instructions: 'After lunch with water' },
+        { id: 'c2', name: 'Atorvastatin', dosage: '20 mg', frequency: '0-0-1 (Night)', duration: 'Ongoing', instructions: 'At bedtime' },
+        { id: 'c3', name: 'Metoprolol Succinate', dosage: '25 mg', frequency: '1-0-0 (Morning)', duration: 'Till Admission', instructions: 'Morning after food' },
+        { id: 'c4', name: 'Pantoprazole', dosage: '40 mg', frequency: '1-0-0 (Morning)', duration: '14 Days', instructions: 'Empty stomach' },
+      ]);
+      setTreatmentPlanSummary('Pre-Op Evaluation for Off-Pump Beating Heart CABG / Minimally Invasive Cardiac Surgery. Patient scheduled for hospital admission upon arrival in New Delhi.');
+    } else if (protocolType === 'ortho') {
+      setSelectedTests([
+        'Complete Blood Count (CBC) & ESR',
+        'Coagulation Profile (PT/INR, APTT)',
+        '12-Lead Resting ECG & 2D Echocardiography',
+        'Serum Creatinine, Electrolytes & Urea',
+        'Chest X-Ray (PA View)',
+        'Viral Markers Screen (HIV, HBsAg, HCV)',
+      ]);
+      setRxMedicines([
+        { id: 'o1', name: 'Etoricoxib', dosage: '90 mg', frequency: '1-0-0 (Morning)', duration: '7 Days', instructions: 'After breakfast for joint pain' },
+        { id: 'o2', name: 'Paracetamol', dosage: '650 mg', frequency: 'As Needed (SOS)', duration: '5 Days', instructions: 'Max 3 tabs daily' },
+        { id: 'o3', name: 'Pantoprazole', dosage: '40 mg', frequency: '1-0-0 (Morning)', duration: '7 Days', instructions: 'Empty stomach' },
+      ]);
+      setTreatmentPlanSummary('Pre-Op Workup for Mako 3D Robotic Total Knee Arthroplasty (TKA). Pre-admission physiotherapy and zero-depth gait training scheduled.');
+    } else if (protocolType === 'dental') {
+      setSelectedTests([
+        'Full Mouth 3D CBCT Radiograph Scan',
+        'Complete Blood Count (CBC) & ESR',
+        'Fasting & Post-Prandial Blood Glucose (HbA1c)',
+        'Viral Markers Screen (HIV, HBsAg, HCV)',
+      ]);
+      setRxMedicines([
+        { id: 'd1', name: 'Amoxicillin + Clavulanic Acid', dosage: '625 mg', frequency: '1-0-1 (Twice Daily)', duration: '5 Days', instructions: 'After meals' },
+        { id: 'd2', name: 'Ketorolac Tromethamine', dosage: '10 mg', frequency: '1-0-1 (Twice Daily)', duration: '3 Days', instructions: 'Post-op analgesia' },
+        { id: 'd3', name: 'Chlorhexidine 0.2% Mouthwash', dosage: '10 ml', frequency: 'Twice Daily', duration: '7 Days', instructions: 'Rinse for 60 seconds after brushing' },
+      ]);
+      setTreatmentPlanSummary('Immediate Loading All-on-4 / All-on-6 Dental Implant Rehabilitation with 3D Guided CAD/CAM Zirconia Prosthesis.');
+    }
+  };
+
+  // Add medication row
+  const handleAddMedicine = () => {
+    setRxMedicines((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        name: '',
+        dosage: '',
+        frequency: '1-0-1 (Twice Daily)',
+        duration: '5 Days',
+        instructions: 'After meals',
+      },
+    ]);
+  };
+
+  // Remove medication row
+  const handleRemoveMedicine = (id) => {
+    setRxMedicines((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  // Toggle Pre-op test selection
+  const handleToggleTest = (testName) => {
+    setSelectedTests((prev) =>
+      prev.includes(testName)
+        ? prev.filter((t) => t !== testName)
+        : [...prev, testName]
+    );
+  };
+
+  // Export Manifest CSV
+  const handleExportManifest = () => {
+    if (!filteredAppointments.length) return;
+    const headers = [
+      'Appointment Ref',
+      'Patient Name',
+      'Country',
+      'Phone / WhatsApp',
+      'Email',
+      'Consultation Date',
+      'Time Slot',
+      'Consultation Mode',
+      'Status',
+      'Symptoms / Condition',
+      'Doctor Notes',
+    ];
+
+    const rows = filteredAppointments.map((a) => [
+      `"${a.appointmentRef || ''}"`,
+      `"${(a.patientName || '').replace(/"/g, '""')}"`,
+      `"${(a.patientCountry || '').replace(/"/g, '""')}"`,
+      `"${(a.patientPhone || '').replace(/"/g, '""')}"`,
+      `"${(a.patientEmail || '').replace(/"/g, '""')}"`,
+      `"${a.appointmentDate || ''}"`,
+      `"${a.timeSlot || ''}"`,
+      `"${a.consultationType || ''}"`,
+      `"${a.status || ''}"`,
+      `"${(a.symptomsDescription || '').replace(/"/g, '""')}"`,
+      `"${(a.doctorNotes || '').replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    const dateStr = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `MediJourney_Consultation_Manifest_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Edit Profile Modal
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -492,6 +671,17 @@ export const DoctorDashboardPage = () => {
               <option value="today">Scheduled Today</option>
               <option value="upcoming">Upcoming Dates</option>
             </select>
+
+            <button
+              type="button"
+              onClick={handleExportManifest}
+              disabled={filteredAppointments.length === 0}
+              className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Download consultation manifest as CSV for hospital records"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-teal-700" />
+              <span>Export Manifest (CSV)</span>
+            </button>
           </div>
         </div>
 
@@ -693,6 +883,18 @@ export const DoctorDashboardPage = () => {
               >
                 <Video className="w-3.5 h-3.5" />
                 <span>4. Video Consult & Schedule</span>
+              </button>
+
+              <button
+                onClick={() => setModalTab('prescription')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
+                  modalTab === 'prescription'
+                    ? 'bg-teal-700 text-white shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Pill className="w-3.5 h-3.5 text-teal-400" />
+                <span>5. E-Prescription & Pre-Op Rx</span>
               </button>
             </div>
 
@@ -1049,6 +1251,288 @@ export const DoctorDashboardPage = () => {
                       className="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
                     />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: E-PRESCRIPTION & PRE-OP DIAGNOSTICS WORKUP */}
+            {modalTab === 'prescription' && (
+              <div className="space-y-5 text-xs">
+                {/* 1. Patient Vitals Matrix */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <div className="font-bold text-slate-900 flex items-center gap-2">
+                      <HeartPulse className="w-4 h-4 text-rose-500" />
+                      <span>Pre-Consultation Clinical Vitals & Triage:</span>
+                    </div>
+                    <span className="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded">
+                      Vital Signs Recorded
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Blood Pressure</label>
+                      <input
+                        type="text"
+                        value={patientVitals.bp}
+                        onChange={(e) => setPatientVitals({ ...patientVitals, bp: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Heart Rate (BPM)</label>
+                      <input
+                        type="text"
+                        value={patientVitals.pulse}
+                        onChange={(e) => setPatientVitals({ ...patientVitals, pulse: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">SpO2 Oxygen</label>
+                      <input
+                        type="text"
+                        value={patientVitals.spo2}
+                        onChange={(e) => setPatientVitals({ ...patientVitals, spo2: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Blood Group</label>
+                      <input
+                        type="text"
+                        value={patientVitals.bloodGroup}
+                        onChange={(e) => setPatientVitals({ ...patientVitals, bloodGroup: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Drug Allergies</label>
+                      <input
+                        type="text"
+                        value={patientVitals.allergies}
+                        onChange={(e) => setPatientVitals({ ...patientVitals, allergies: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Fast Protocol Loader Presets */}
+                <div className="bg-teal-50/70 p-3.5 rounded-2xl border border-teal-200 flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-teal-950 flex items-center gap-1.5 text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                      <span>One-Click Pre-Op Specialty Protocols:</span>
+                    </div>
+                    <p className="text-[11px] text-teal-800">
+                      Auto-fill evidence-based surgical workup tests & standard pre-admission medications.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => applyProtocolTemplate('cardiac')}
+                      className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg font-bold text-[11px] shadow-2xs transition"
+                    >
+                      🫀 Cardiac Protocol
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyProtocolTemplate('ortho')}
+                      className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg font-bold text-[11px] shadow-2xs transition"
+                    >
+                      🦴 Robotic Ortho
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyProtocolTemplate('dental')}
+                      className="px-2.5 py-1 bg-white hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-lg font-bold text-[11px] shadow-2xs transition"
+                    >
+                      🦷 Dental Implant
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Prescription (Rx) Medication Builder Table */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <Pill className="w-4 h-4 text-teal-600" />
+                      <span>Prescription Medications (Rx) ({rxMedicines.length}):</span>
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={handleAddMedicine}
+                      className="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold text-xs flex items-center gap-1 transition shadow-2xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Medicine</span>
+                    </button>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                        <tr>
+                          <th className="py-2 px-3 font-bold">#</th>
+                          <th className="py-2 px-3 font-bold">Medicine / Drug Name</th>
+                          <th className="py-2 px-3 font-bold">Dosage</th>
+                          <th className="py-2 px-3 font-bold">Frequency</th>
+                          <th className="py-2 px-3 font-bold">Duration</th>
+                          <th className="py-2 px-3 font-bold">Timing / Instructions</th>
+                          <th className="py-2 px-3 text-right font-bold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {rxMedicines.map((med, idx) => (
+                          <tr key={med.id || idx} className="hover:bg-slate-50/80">
+                            <td className="py-2 px-3 font-bold text-slate-400">{idx + 1}</td>
+                            <td className="py-2 px-3">
+                              <input
+                                type="text"
+                                placeholder="e.g. Augmentin"
+                                value={med.name}
+                                onChange={(e) => {
+                                  const updated = [...rxMedicines];
+                                  updated[idx].name = e.target.value;
+                                  setRxMedicines(updated);
+                                }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500 font-semibold"
+                              />
+                            </td>
+                            <td className="py-2 px-3">
+                              <input
+                                type="text"
+                                placeholder="e.g. 625 mg"
+                                value={med.dosage}
+                                onChange={(e) => {
+                                  const updated = [...rxMedicines];
+                                  updated[idx].dosage = e.target.value;
+                                  setRxMedicines(updated);
+                                }}
+                                className="w-24 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500"
+                              />
+                            </td>
+                            <td className="py-2 px-3">
+                              <select
+                                value={med.frequency}
+                                onChange={(e) => {
+                                  const updated = [...rxMedicines];
+                                  updated[idx].frequency = e.target.value;
+                                  setRxMedicines(updated);
+                                }}
+                                className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500"
+                              >
+                                <option value="1-0-1 (Twice Daily)">1-0-1 (Twice Daily)</option>
+                                <option value="1-0-0 (Morning)">1-0-0 (Morning)</option>
+                                <option value="0-0-1 (Night)">0-0-1 (Night)</option>
+                                <option value="1-1-1 (Thrice Daily)">1-1-1 (Thrice Daily)</option>
+                                <option value="As Needed (SOS)">As Needed (SOS)</option>
+                              </select>
+                            </td>
+                            <td className="py-2 px-3">
+                              <input
+                                type="text"
+                                placeholder="e.g. 5 Days"
+                                value={med.duration}
+                                onChange={(e) => {
+                                  const updated = [...rxMedicines];
+                                  updated[idx].duration = e.target.value;
+                                  setRxMedicines(updated);
+                                }}
+                                className="w-20 bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500"
+                              />
+                            </td>
+                            <td className="py-2 px-3">
+                              <input
+                                type="text"
+                                placeholder="e.g. After meals"
+                                value={med.instructions}
+                                onChange={(e) => {
+                                  const updated = [...rxMedicines];
+                                  updated[idx].instructions = e.target.value;
+                                  setRxMedicines(updated);
+                                }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-teal-500"
+                              />
+                            </td>
+                            <td className="py-2 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMedicine(med.id)}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded"
+                                title="Remove Medicine"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 4. Pre-Op Diagnostic Workup Orders Checklist */}
+                <div className="space-y-2">
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <ClipboardCheck className="w-4 h-4 text-teal-600" />
+                    <span>Pre-Admission Laboratory & Diagnostic Orders ({selectedTests.length} Selected):</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                    {availableLabTests.map((test) => {
+                      const isChecked = selectedTests.includes(test);
+                      return (
+                        <label
+                          key={test}
+                          className={`flex items-center gap-2 p-2 rounded-xl border text-xs cursor-pointer transition ${
+                            isChecked
+                              ? 'bg-white border-teal-400 text-teal-950 font-bold shadow-2xs'
+                              : 'bg-white/50 border-slate-200 text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleTest(test)}
+                            className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                          />
+                          <span>{test}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 5. Prescription Action Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rxSummaryText = `[CLINICAL E-PRESCRIPTION & PRE-OP WORKUP]\nVitals: BP ${patientVitals.bp} | Pulse ${patientVitals.pulse} | SpO2 ${patientVitals.spo2} | Blood Group: ${patientVitals.bloodGroup} | Allergies: ${patientVitals.allergies}\n\nPrescribed Rx:\n${rxMedicines.map((m, i) => `${i + 1}. ${m.name} (${m.dosage}) - ${m.frequency} for ${m.duration} [${m.instructions}]`).join('\n')}\n\nPre-Op Diagnostics Ordered:\n${selectedTests.map((t, i) => `- ${t}`).join('\n')}`;
+                      setDoctorNotes((prev) => (prev ? `${prev}\n\n${rxSummaryText}` : rxSummaryText));
+                      setSuccessMsg('Prescription & Diagnostics orders synced to Assessment Notes.');
+                      setTimeout(() => setSuccessMsg(''), 2500);
+                    }}
+                    className="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-300 rounded-xl font-bold text-xs flex items-center gap-1.5 transition"
+                  >
+                    <Save className="w-3.5 h-3.5 text-teal-700" />
+                    <span>Sync Rx to Assessment Notes</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow transition"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-teal-400" />
+                    <span>Print Official Rx & Diagnostic Slip</span>
+                  </button>
                 </div>
               </div>
             )}
