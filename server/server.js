@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 // Enable CORS
 app.use(
   cors({
-    origin: '*',
+    origin: process.env.CLIENT_URL || '*',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
