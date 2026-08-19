@@ -112,7 +112,37 @@ export const TreatmentsPage = () => {
           <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
             Compare procedural costs in India against the United States, United Kingdom, and Europe. All packages feature certified hospital admissions, surgeon fees, luxury room accommodation, and post-op care.
           </p>
+          <div className="pt-1">
+            <Link
+              to="/discover"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-300 hover:text-teal-200 underline underline-offset-2 transition"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Explore our Discovery Dashboard →
+            </Link>
+          </div>
         </div>
+      </div>
+
+      {/* India Savings Highlight Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { flag: '🇺🇸', country: 'vs USA', saving: 'Up to 80% cheaper', color: 'bg-rose-50 border-rose-200 text-rose-700' },
+          { flag: '🇬🇧', country: 'vs UK',  saving: 'Up to 75% cheaper', color: 'bg-orange-50 border-orange-200 text-orange-700' },
+          { flag: '🇦🇺', country: 'vs Australia', saving: 'Up to 70% cheaper', color: 'bg-amber-50 border-amber-200 text-amber-700' },
+          { flag: '🇦🇪', country: 'vs UAE', saving: 'Up to 60% cheaper', color: 'bg-teal-50 border-teal-200 text-teal-700' },
+        ].map((item) => (
+          <div
+            key={item.country}
+            className={`rounded-2xl border px-4 py-3 flex items-center gap-3 ${item.color}`}
+          >
+            <span className="text-2xl">{item.flag}</span>
+            <div>
+              <p className="font-extrabold text-sm">{item.saving}</p>
+              <p className="text-[11px] font-medium opacity-80">{item.country}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Floating Comparison Drawer (when items selected) */}
@@ -262,10 +292,15 @@ export const TreatmentsPage = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
 
-                    <div className="absolute top-3 left-3">
+                    <div className="absolute top-3 left-3 flex flex-col gap-1">
                       <span className="bg-navy-950/80 backdrop-blur-xs text-teal-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-teal-500/30">
                         {t.category}
                       </span>
+                      {t.isPopular && (
+                        <span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm self-start">
+                          🔥 Popular
+                        </span>
+                      )}
                     </div>
 
                     {/* Quick Compare Button */}

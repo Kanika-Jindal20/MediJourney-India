@@ -26,11 +26,9 @@ import {
   MessageSquare,
   MapPin,
   FileCheck,
-=======
   Wallet,
   Activity,
   Layers,
-  main
 } from 'lucide-react';
 
 export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHospital }) => {
@@ -75,6 +73,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
     '2D Echocardiogram: Ejection fraction 45%, severe aortic valve calcification with moderate stenosis.',
     'Trichoscopy Analysis: Norwood-Hamilton Scale Grade IV male pattern androgenetic alopecia with miniaturization.',
     'Maxillary CBCT: Severe alveolar bone resorption in posterior regions, edentulous maxilla.',
+  ];
 
   const sampleQueries = [
     'Looking for All-on-4 dental implants with 5 days recovery',

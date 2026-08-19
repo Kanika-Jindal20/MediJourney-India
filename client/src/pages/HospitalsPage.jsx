@@ -66,6 +66,14 @@ export const HospitalsPage = () => {
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedHospitalForBooking, setSelectedHospitalForBooking] = useState(null);
 
+  // Live stats derived from fetched hospitals
+  const avgRating =
+    hospitals.length > 0
+      ? (hospitals.reduce((sum, h) => sum + (h.rating || 0), 0) / hospitals.length).toFixed(1)
+      : null;
+  const uniqueCities = [...new Set(hospitals.map((h) => h.city))].length;
+
+
   const fetchHospitals = async () => {
     setLoading(true);
     setError('');
@@ -129,10 +137,44 @@ export const HospitalsPage = () => {
           <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
             Discover premier quaternary medical institutions featuring international patient concierge lounges, English & multilingual medical teams (Arabic, Russian, French), and cutting-edge robotic surgical suites.
           </p>
+          <div className="pt-1">
+            <Link
+              to="/discover"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-300 hover:text-teal-200 underline underline-offset-2 transition"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Explore our Discovery Dashboard →
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Facility Quick Filter Pills */}
+      {/* Live Stats Strip */}
+      {!loading && hospitals.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Hospitals Listed', value: hospitals.length, icon: '🏥' },
+            { label: 'Indian Cities', value: uniqueCities, icon: '🗺️' },
+            { label: 'Avg Patient Rating', value: avgRating ? `${avgRating} ★` : '4.9 ★', icon: '⭐' },
+            { label: 'Accreditation Standards', value: 'JCI · NABH · ISO', icon: '🛡️' },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="bg-white border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xs"
+            >
+              <span className="text-xl">{stat.icon}</span>
+              <div>
+                <p className="font-extrabold text-slate-900 text-lg leading-tight">{stat.value}</p>
+                <p className="text-[11px] text-slate-500">{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Facility Quick Filter Pills */}
+
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         {FACILITIES.map((fac) => (
           <button
@@ -417,6 +459,16 @@ export const HospitalsPage = () => {
                             <span>{hosp.city}, {hosp.state}</span>
                           </div>
                         </div>
+
+                        {/* Top Rated ribbon */}
+                        {hosp.rating >= 4.9 && (
+                          <div className="absolute bottom-3 right-3">
+                            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow flex items-center gap-1">
+                              🏆 Top Rated
+                            </span>
+                          </div>
+                        )}
+
 
                         <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-xs text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />

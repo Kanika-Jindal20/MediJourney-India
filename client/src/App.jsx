@@ -20,6 +20,7 @@ import { TreatmentDetailPage } from './pages/TreatmentDetailPage';
 import { ComparePage } from './pages/ComparePage';
 import { TravelGuidePage } from './pages/TravelGuidePage';
 import { PatientDashboardPage } from './pages/PatientDashboardPage';
+import { DiscoveryDashboardPage } from './pages/DiscoveryDashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 
@@ -86,6 +87,7 @@ function AppContent() {
           <Route path="/treatments/:slug" element={<TreatmentDetailPage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/travel-guide" element={<TravelGuidePage />} />
+          <Route path="/discover" element={<DiscoveryDashboardPage />} />
           <Route path="/patient/dashboard" element={<PatientDashboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
