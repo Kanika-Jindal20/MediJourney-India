@@ -183,20 +183,42 @@ exports.getDoctorQueue = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Doctor profile not found' });
     }
 
-    const { status, date } = req.query;
+    const { status, date, search, consultationType, dateRange } = req.query;
     let query = { doctorId: doctor._id };
 
     if (status && status !== 'all') {
       query.status = status;
     }
 
+    if (consultationType && consultationType !== 'all') {
+      query.consultationType = consultationType;
+    }
+
     if (date) {
       query.appointmentDate = date;
+    } else if (dateRange === 'today') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      query.appointmentDate = todayStr;
+    } else if (dateRange === 'upcoming') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      query.appointmentDate = { $gte: todayStr };
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { appointmentRef: searchRegex },
+        { patientName: searchRegex },
+        { patientEmail: searchRegex },
+        { patientCountry: searchRegex },
+        { symptomsDescription: searchRegex },
+      ];
     }
 
     const appointments = await Appointment.find(query)
-      .populate('treatmentId', 'name category')
-      .populate('hospitalId', 'name city')
+      .populate('treatmentId', 'name category costIndiaUSD')
+      .populate('hospitalId', 'name city state airportName address')
+      .populate('patientId', 'fullName email phone country')
       .sort({ appointmentDate: 1, createdAt: -1 });
 
     res.json({
@@ -205,6 +227,9 @@ exports.getDoctorQueue = async (req, res, next) => {
         _id: doctor._id,
         fullName: doctor.fullName,
         specialty: doctor.specialty,
+        qualifications: doctor.qualifications,
+        avatarUrl: doctor.avatarUrl,
+        consultationFeeUSD: doctor.consultationFeeUSD,
       },
       count: appointments.length,
       appointments,

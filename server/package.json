@@ -20,5 +20,11 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
+  },
+  "mongodbMemoryServer": {
+    "version": "5.0.31",
+    "arch": "x64",
+    "platform": "win32"
   }
 }
+
