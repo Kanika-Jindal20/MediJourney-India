@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { aiService } from '../../services/aiService';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -9,38 +9,26 @@ import {
   Send,
   Building2,
   Stethoscope,
-  TrendingDown,
   Plane,
-  Clock,
-  ArrowRight,
-  ShieldCheck,
   CheckCircle2,
   Compass,
-
   FileSearch,
   Calculator,
   Calendar,
   DollarSign,
-  AlertCircle,
-  HelpCircle,
   MessageSquare,
-  MapPin,
-  FileCheck,
-  Wallet,
   Activity,
-  Layers,
 } from 'lucide-react';
 
 export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHospital }) => {
   const { formatPrice, currency } = useCurrency();
-  const [activeTab, setActiveTab] = useState('triage'); // 'triage' | 'cost' | 'report' | 'itinerary' | 'chat'
+  const [activeTab, setActiveTab] = useState('triage');
   const [query, setQuery] = useState('');
   const [preferredCity, setPreferredCity] = useState('All');
   const [budgetUSD, setBudgetUSD] = useState('any');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-
 
   // Itinerary state
   const [itineraryProcedure, setItineraryProcedure] = useState('Robotic Knee Replacement');
@@ -59,7 +47,6 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
 
-  // Sample prompt chips tailored to medical tourism
   const sampleTriageQueries = [
     'Severe osteoarthritis in knee, seeking robotic joint replacement',
     'Full-mouth All-on-4 dental implants with zirconia bridge',
@@ -73,16 +60,6 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
     '2D Echocardiogram: Ejection fraction 45%, severe aortic valve calcification with moderate stenosis.',
     'Trichoscopy Analysis: Norwood-Hamilton Scale Grade IV male pattern androgenetic alopecia with miniaturization.',
     'Maxillary CBCT: Severe alveolar bone resorption in posterior regions, edentulous maxilla.',
-  ];
-
-  const sampleQueries = [
-    'Looking for All-on-4 dental implants with 5 days recovery',
-    '3,500 grafts hair transplant in Delhi with natural hairline',
-    'Affordable IVF cycle with high success rate and embryo testing',
-    'Robotic knee replacement surgery cost vs USA / UK',
-    'Heart bypass CABG surgery at top accredited cardiology hospital',
-    'CyberKnife radiosurgery for targeted cancer treatment in Mumbai',
- main
   ];
 
   const sampleChatQuestions = [
@@ -100,11 +77,8 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
       const res = await aiService.getDiscoveryRecommendations({
         query: queryText,
         preferredCity,
- feature/Ai
         mode: mode === 'report' ? 'report_explainer' : mode === 'cost' ? 'cost_estimator' : 'discovery',
-
         budgetUSD: budgetUSD !== 'any' ? Number(budgetUSD) : undefined,
- main
       });
       setResult(res);
     } catch (err) {
@@ -173,65 +147,26 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
 
         {/* Mode Selector Tabs */}
         <div className="flex flex-wrap bg-slate-100 p-1.5 rounded-2xl gap-1 text-xs font-semibold">
-          <button
-            onClick={() => handleTabChange('triage')}
-            className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition ${
-              activeTab === 'triage'
-                ? 'bg-white text-teal-800 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-            <span>Clinical Triage</span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange('cost')}
-            className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition ${
-              activeTab === 'cost'
-                ? 'bg-white text-teal-800 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Calculator className="w-3.5 h-3.5 text-teal-600" />
-            <span>Cost & Stay Estimator</span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange('report')}
-            className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition ${
-              activeTab === 'report'
-                ? 'bg-white text-teal-800 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <FileSearch className="w-3.5 h-3.5 text-teal-600" />
-            <span>Report Explainer</span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange('itinerary')}
-            className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition ${
-              activeTab === 'itinerary'
-                ? 'bg-white text-teal-800 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Plane className="w-3.5 h-3.5 text-teal-600" />
-            <span>Medical Itinerary</span>
-          </button>
-
-          <button
-            onClick={() => handleTabChange('chat')}
-            className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition ${
-              activeTab === 'chat'
-                ? 'bg-white text-teal-800 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5 text-teal-600" />
-            <span>AI Q&A Chat</span>
-          </button>
+          {[
+            { id: 'triage', label: 'Clinical Triage', Icon: Sparkles },
+            { id: 'cost', label: 'Cost & Stay Estimator', Icon: Calculator },
+            { id: 'report', label: 'Report Explainer', Icon: FileSearch },
+            { id: 'itinerary', label: 'Medical Itinerary', Icon: Plane },
+            { id: 'chat', label: 'AI Q&A Chat', Icon: MessageSquare },
+          ].map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => handleTabChange(id)}
+              className={`flex-1 min-w-[120px] py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition ${
+                activeTab === id
+                  ? 'bg-white text-teal-800 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5 text-teal-600" />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Dynamic Mode Header Banner */}
@@ -239,33 +174,22 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
           <div className="bg-gradient-to-r from-navy-950 via-slate-900 to-navy-950 text-white rounded-2xl p-5 shadow-lg border border-teal-500/30">
             <div className="flex items-center gap-2 text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
               <Sparkles className="w-4 h-4 text-teal-400 animate-pulse" />
-              {activeTab === 'triage'
-                ? 'Intelligent Clinical Triage'
-                : activeTab === 'cost'
-                ? 'International Price Benchmarking'
-                : activeTab === 'itinerary'
-                ? 'Personalized Medical Travel Planner'
-                : 'Diagnostic Findings Interpreter'}
+              {activeTab === 'triage' && 'Intelligent Clinical Triage'}
+              {activeTab === 'cost' && 'International Price Benchmarking'}
+              {activeTab === 'itinerary' && 'Personalized Medical Travel Planner'}
+              {activeTab === 'report' && 'Diagnostic Findings Interpreter'}
             </div>
-
             <h4 className="text-lg sm:text-xl font-display font-bold">
-              {activeTab === 'triage'
-                ? 'Describe your medical condition or desired surgical procedure'
-                : activeTab === 'cost'
-                ? 'Compare India healthcare costs vs USA, UK, Canada & UAE'
-                : activeTab === 'itinerary'
-                ? 'Day-by-Day Treatment, Hospital Stay & Tourism Timeline'
-                : 'Paste diagnostic scan findings or pathology summary'}
+              {activeTab === 'triage' && 'Describe your medical condition or desired surgical procedure'}
+              {activeTab === 'cost' && 'Compare India healthcare costs vs USA, UK, Canada & UAE'}
+              {activeTab === 'itinerary' && 'Day-by-Day Treatment, Hospital Stay & Tourism Timeline'}
+              {activeTab === 'report' && 'Paste diagnostic scan findings or pathology summary'}
             </h4>
-
             <p className="text-slate-300 text-xs mt-1 leading-relaxed">
-              {activeTab === 'triage'
-                ? 'Our clinical matching engine maps symptoms to JCI/NABH accredited centers, verifies top specialist surgeons, and calculates estimated recovery timelines.'
-                : activeTab === 'cost'
-                ? 'Transparent international price comparisons showing ~70–90% cost savings for high-end surgeries in India without compromising clinical excellence.'
-                : activeTab === 'itinerary'
-                ? 'Customized timeline spanning pre-op consultation, surgical admission, recuperation hotel stay, local wellness, and Fit-to-Fly certification.'
-                : 'Our AI translates complex radiology (MRI, CT, X-Ray) and laboratory terminology into clear explanations with direct specialist department recommendations.'}
+              {activeTab === 'triage' && 'Our clinical matching engine maps symptoms to JCI/NABH accredited centers, verifies top specialist surgeons, and calculates estimated recovery timelines.'}
+              {activeTab === 'cost' && 'Transparent international price comparisons showing ~70-90% cost savings for high-end surgeries in India without compromising clinical excellence.'}
+              {activeTab === 'itinerary' && 'Customized timeline spanning pre-op consultation, surgical admission, recuperation hotel stay, local wellness, and Fit-to-Fly certification.'}
+              {activeTab === 'report' && 'Our AI translates complex radiology (MRI, CT, X-Ray) and laboratory terminology into clear explanations with direct specialist department recommendations.'}
             </p>
           </div>
         )}
@@ -317,24 +241,21 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
                 </div>
               )}
 
+              {activeTab !== 'report' && (
+                <div className="w-full sm:w-52">
+                  <select
+                    value={budgetUSD}
+                    onChange={(e) => setBudgetUSD(e.target.value)}
+                    className="w-full h-full bg-slate-50 border border-slate-300 rounded-2xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none font-semibold text-slate-800"
+                  >
+                    <option value="any">Any Budget Tier</option>
+                    <option value="2500">Under $2,500 (Dental / Hair / Minor)</option>
+                    <option value="6000">$2,500 - $6,000 (Joints / IVF / Cosmetic)</option>
+                    <option value="12000">$6,000 - $12,000 (Cardiology / Oncology)</option>
+                  </select>
+                </div>
+              )}
 
-        {/* Intro */}
-        <div className="bg-gradient-to-r from-teal-900 via-slate-900 to-navy-950 text-white rounded-2xl p-5 shadow-lg border border-teal-500/30">
-          <div className="flex items-center gap-2 text-teal-300 text-xs font-bold uppercase tracking-wider mb-1">
-            <Sparkles className="w-4 h-4 text-teal-400 animate-pulse" />
-            AI Clinical Matcher & Savings Engine
-          </div>
-          <h4 className="text-xl font-display font-bold">
-            Describe your condition, desired treatment or budget
-          </h4>
-          <p className="text-slate-300 text-xs mt-1 leading-relaxed">
-            Our AI engine maps your symptoms to specialized departments, scans JCI/NABH accredited hospital facilities, calculates savings vs Western hospitals, and recommends verified specialists.
-          </p>
-
-          {/* Quick chips */}
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {sampleQueries.map((item, idx) => (
- main
               <button
                 onClick={() => handleSearch()}
                 disabled={loading || !query.trim()}
@@ -416,14 +337,12 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
               </div>
             </div>
 
-            {/* Itinerary Timeline */}
             {itineraryResult && (
               <div className="space-y-3">
                 <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-teal-600" />
                   Proposed {itineraryDays}-Day Medical Journey Itinerary ({itineraryCity})
                 </div>
-
                 <div className="relative pl-6 border-l-2 border-teal-200 space-y-4 text-xs">
                   {itineraryResult.map((item, idx) => (
                     <div key={idx} className="relative group">
@@ -452,10 +371,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
           <div className="space-y-4">
             <div className="h-80 overflow-y-auto bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 text-xs">
               {chatMessages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+                <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
                     className={`max-w-[80%] p-3.5 rounded-2xl leading-relaxed whitespace-pre-line ${
                       msg.sender === 'user'
@@ -477,7 +393,6 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
               )}
             </div>
 
-            {/* Chat Prompt Chips */}
             <div className="flex flex-wrap gap-1.5">
               {sampleChatQuestions.map((q, i) => (
                 <button
@@ -490,7 +405,6 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
               ))}
             </div>
 
-            {/* Chat Input */}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -512,76 +426,22 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
           </div>
         )}
 
-        {/* Loading Spinner for Triage & Cost */}
+        {/* Loading Spinner */}
         {loading && (
           <div className="text-center py-10 space-y-3">
             <Spinner size="lg" className="mx-auto text-teal-600" />
             <p className="text-xs font-semibold text-slate-600">
               Analyzing medical query against JCI clinical databases & specialist surgeons...
             </p>
-
-        {/* Input & Filter Bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSearch();
-          }}
-          className="space-y-3"
-        >
-          <div className="relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. Need robotic knee replacement or dental implants under $3,000..."
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-4 pr-10 py-3 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <select
-              value={preferredCity}
-              onChange={(e) => setPreferredCity(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
-            >
-              <option value="All">All Medical Hubs (Pan-India)</option>
-              <option value="Delhi NCR">Delhi NCR & Gurugram</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Chennai">Chennai</option>
-              <option value="Bengaluru">Bengaluru</option>
-              <option value="Hyderabad">Hyderabad</option>
-              <option value="Kochi">Kochi (Kerala)</option>
-            </select>
-
-            <select
-              value={budgetUSD}
-              onChange={(e) => setBudgetUSD(e.target.value)}
-              className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
-            >
-              <option value="any">Any Budget Tier</option>
-              <option value="2500">Under $2,500 (Dental / Hair / Minor)</option>
-              <option value="6000">$2,500 - $6,000 (Joints / IVF / Cosmetic)</option>
-              <option value="12000">$6,000 - $12,000 (Cardiology / Oncology)</option>
-            </select>
-
-            <button
-              type="submit"
-              disabled={loading || !query.trim()}
-              className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1.5 transition disabled:opacity-50"
-            >
-              {loading ? <Spinner size="sm" /> : <Send className="w-3.5 h-3.5" />}
-              <span>Analyze & Match</span>
-            </button>
- main
           </div>
         )}
 
         {error && <Alert type="error" message={error} />}
 
-        {/* RESULTS SECTION (Triage, Cost, Report) */}
+        {/* RESULTS SECTION */}
         {result && !loading && (
           <div className="space-y-6 pt-4 border-t border-slate-200">
-            {/* Urgency & Category Badge Banner */}
+            {/* Category & Stay Banner */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-teal-50/70 border border-teal-100 rounded-2xl">
               <div>
                 <span className="text-[10px] uppercase tracking-wider font-extrabold text-teal-700 block">
@@ -591,8 +451,6 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
                   {result.detectedCategory}
                 </span>
               </div>
-
-
               <div>
                 <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">
                   Stay & Recovery
@@ -603,7 +461,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
               </div>
             </div>
 
-            {/* Cross-Border Price Comparison (if cost tab or comparison available) */}
+            {/* Price Comparison */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                 <span className="flex items-center gap-1.5">
@@ -614,45 +472,31 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
                   Est. Net Savings: ${result.savingsAmountUSD?.toLocaleString()} USD
                 </span>
               </div>
-
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-3 rounded-xl bg-teal-50 border border-teal-200">
                   <div className="text-[10px] font-bold text-teal-900">India (Accredited JCI)</div>
-                  <div className="text-base font-extrabold text-teal-700 mt-1">
-                    {formatPrice(result.estimatedCostUSD)}
-                  </div>
-                  <div className="text-[10px] text-teal-600 font-semibold mt-0.5">
-                    ★ Best Value & Zero Wait Time
-                  </div>
+                  <div className="text-base font-extrabold text-teal-700 mt-1">{formatPrice(result.estimatedCostUSD)}</div>
+                  <div className="text-[10px] text-teal-600 font-semibold mt-0.5">★ Best Value & Zero Wait Time</div>
                 </div>
-
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="text-[10px] font-bold text-slate-500">United States (Average)</div>
-                  <div className="text-base font-bold text-slate-800 mt-1">
-                    {formatPrice(result.costUSAUSD)}
-                  </div>
+                  <div className="text-base font-bold text-slate-800 mt-1">{formatPrice(result.costUSAUSD)}</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">High insurance deductible</div>
                 </div>
-
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="text-[10px] font-bold text-slate-500">United Kingdom (Private)</div>
-                  <div className="text-base font-bold text-slate-800 mt-1">
-                    {formatPrice(result.costUKUSD)}
-                  </div>
+                  <div className="text-base font-bold text-slate-800 mt-1">{formatPrice(result.costUKUSD)}</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">NHS long waiting queues</div>
                 </div>
-
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="text-[10px] font-bold text-slate-500">UAE / Singapore</div>
-                  <div className="text-base font-bold text-slate-800 mt-1">
-                    {formatPrice(Math.round(result.estimatedCostUSD * 2.8))}
-                  </div>
+                  <div className="text-base font-bold text-slate-800 mt-1">{formatPrice(Math.round(result.estimatedCostUSD * 2.8))}</div>
                   <div className="text-[10px] text-slate-400 mt-0.5">Moderate savings</div>
                 </div>
               </div>
             </div>
 
-            {/* Report Explanation / Clinical Guidance */}
+            {/* Report Explanation */}
             {result.reportExplanation && (
               <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 space-y-1.5 text-xs">
                 <div className="font-bold text-amber-900 flex items-center gap-1.5">
@@ -663,7 +507,7 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
               </div>
             )}
 
-            {/* Key Clinical Findings / Notes */}
+            {/* Guidance Notes */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs">
               <div className="font-bold text-slate-800 flex items-center gap-1.5">
                 <Compass className="w-4 h-4 text-teal-600" />
@@ -678,9 +522,6 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
                 ))}
               </ul>
             </div>
-
-
-            {/* Recommended Specialists */}
 
             {/* Recommended Treatments */}
             {result.recommendedTreatments?.length > 0 && (
@@ -713,7 +554,6 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
             )}
 
             {/* Recommended Doctors */}
- main
             {result.recommendedDoctors?.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -721,11 +561,8 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
                     <Stethoscope className="w-4 h-4 text-teal-600" />
                     Top Verified Specialists for Your Case
                   </h5>
-                  <span className="text-[11px] text-slate-500">
-                    Direct Pre-Travel Video Consultations Available
-                  </span>
+                  <span className="text-[11px] text-slate-500">Direct Pre-Travel Video Consultations Available</span>
                 </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {result.recommendedDoctors.map((doc) => (
                     <div
@@ -747,17 +584,12 @@ export const AIAssistantWidget = ({ isOpen, onClose, onSelectDoctor, onSelectHos
                           </div>
                         </div>
                       </div>
-
                       <button
                         onClick={() => {
                           onClose();
                           if (onSelectDoctor) onSelectDoctor(doc);
                         }}
-
                         className="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shrink-0 transition shadow-xs"
-=======
-                        className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold shrink-0 transition shadow-xs"
-main
                       >
                         Book
                       </button>
@@ -780,12 +612,8 @@ main
                       key={hosp._id}
                       className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-2 text-xs hover:border-slate-300 transition"
                     >
-                      <div className="font-bold text-slate-900 text-xs leading-snug">
-                        {hosp.name}
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        {hosp.city}, {hosp.state}
-                      </div>
+                      <div className="font-bold text-slate-900 text-xs leading-snug">{hosp.name}</div>
+                      <div className="text-[11px] text-slate-500">{hosp.city}, {hosp.state}</div>
                       <div className="flex flex-wrap gap-1">
                         {hosp.accreditations?.map((acc, i) => (
                           <span
@@ -807,4 +635,3 @@ main
     </Modal>
   );
 };
-

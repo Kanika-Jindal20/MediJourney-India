@@ -19,7 +19,7 @@ exports.aiDiscovery = async (req, res, next) => {
     let detectedCategory = 'Cosmetic & Plastic Surgery';
     let urgencyLevel = 'Elective / Standard Planning';
     let keyFindings = [];
-
+    
     if (
       lowerQuery.includes('tooth') ||
       lowerQuery.includes('teeth') ||
@@ -133,6 +133,7 @@ exports.aiDiscovery = async (req, res, next) => {
     ) {
       detectedCategory = 'Ayurveda & Wellness';
       keyFindings = ['Ayurvedic Pulse Diagnosis (Nadi Pariksha) by certified Vaidyas', 'Authentic medicated herbal Abhyanga & Shirodhara', 'Kerala waterfront post-surgical organic rejuvenation'];
+ main
     }
 
     // Find relevant treatments
