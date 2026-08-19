@@ -226,12 +226,12 @@ Use the built-in **Demo Role Switcher** in the top navigation bar or log in with
 
 | Team Member | Roll / Reg No. | Key Responsibilities & Implementation Areas |
 | :--- | :--- | :--- |
-| **Member 1 (Team Leader)** | - | Full-Stack Architecture, Database Schema, System Design & Coordination |
-| **Member 2** | - | Backend REST APIs, Express Routing & Controller Logic |
-| **Member 3** | - | Database Modeling, MongoDB Integration & Data Seeding |
-| **Member 4** | - | Patient UI Development, Directory Search, Filter Engine & Booking Flow |
-| **Member 5** | - | Doctor & Admin Portals, Availability Scheduler, Dossier Review |
-| **Member 6** | - | AI Discovery Matcher, Visa Guidelines & Multi-Currency Converter |
+| **Member 1 (Team Leader)** | - | Backend Development & Integration, Authentication, Database & API Integration, Admin Portal, System Architecture, Deployment |
+| **Member 2** | - | Patient Module, Patient Dashboard, Patient UI/UX, Patient Workflow |
+| **Member 3** | - | Doctor Module, Doctor Dashboard, Doctor Management, Doctor Availability/Slots |
+| **Member 4** | - | Hospital Module, Treatment Module, Discovery Module, Hospital & Treatment Information, Search & Filtering |
+| **Member 5** | - | Appointment Module, Medical Records, Travel/Visa Module, Appointment & Medical Record Workflows |
+| **Member 6** | - | AI Features, Clinical Triage, Cost & Stay Estimator, Report Explainer, Medical Itinerary, AI Q&A Chat |
 
 ---
 *Developed for Smart India Hackathon (SIH 2026).*
