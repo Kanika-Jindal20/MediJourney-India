@@ -33,6 +33,33 @@ app.use(
   })
 );
 
+// Database connection middleware for Serverless & Long-running
+let isConnected = false;
+const ensureDB = async () => {
+  if (!isConnected) {
+    await connectDB();
+    try {
+      const hospitalCount = await Hospital.countDocuments();
+      if (hospitalCount === 0) {
+        console.log('[Server] Database is empty. Auto-seeding initial medical tourism catalog...');
+        await seedAllData();
+      }
+    } catch (e) {
+      console.warn('[Server] Auto-seed check notice:', e.message);
+    }
+    isConnected = true;
+  }
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Serve static uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -60,28 +87,14 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to DB and start server
-const startServer = async () => {
-  try {
-    await connectDB();
+// If running directly (e.g. node server.js locally)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`========================================================`);
+    console.log(`🚀 MediJourney India REST API Server running on port ${PORT}`);
+    console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`========================================================`);
+  });
+}
 
-    // Auto-seed if database is newly initialized
-    const hospitalCount = await Hospital.countDocuments();
-    if (hospitalCount === 0) {
-      console.log('[Server] Database is empty. Auto-seeding initial medical tourism catalog...');
-      await seedAllData();
-    }
-
-    app.listen(PORT, () => {
-      console.log(`========================================================`);
-      console.log(`🚀 MediJourney India REST API Server running on port ${PORT}`);
-      console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
-      console.log(`========================================================`);
-    });
-  } catch (err) {
-    console.error('[Server] Failed to start server:', err);
-    process.exit(1);
-  }
-};
-
-startServer();
+module.exports = app;
