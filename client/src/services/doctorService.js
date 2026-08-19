@@ -17,6 +17,10 @@ export const doctorService = {
     return await api.post(`/doctors/${doctorId}/slots`, slotData);
   },
 
+  createBulkSlots: async (doctorId, slotsArray) => {
+    return await api.post(`/doctors/${doctorId}/slots`, { slots: slotsArray });
+  },
+
   deleteSlot: async (slotId) => {
     return await api.delete(`/doctors/slots/${slotId}`);
   },

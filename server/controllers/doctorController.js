@@ -118,13 +118,52 @@ exports.getDoctorSlots = async (req, res, next) => {
   }
 };
 
-// @desc    Create new slot for doctor (Doctor or Admin)
+// @desc    Create new slot(s) for doctor (Doctor or Admin)
 // @route   POST /api/doctors/:id/slots
 // @access  Private (Doctor/Admin)
 exports.createSlot = async (req, res, next) => {
   try {
-    const { slotDate, startTime, endTime, slotType } = req.body;
     const doctorId = req.params.id;
+
+    // Check if bulk creation array is provided
+    if (Array.isArray(req.body.slots) && req.body.slots.length > 0) {
+      const createdSlots = [];
+      const skippedSlots = [];
+
+      for (const slotItem of req.body.slots) {
+        const { slotDate, startTime, endTime, slotType } = slotItem;
+        if (!slotDate || !startTime || !endTime) continue;
+
+        const existing = await DoctorSlot.findOne({
+          doctorId,
+          slotDate,
+          startTime,
+        });
+
+        if (existing) {
+          skippedSlots.push(slotItem);
+        } else {
+          const newSlot = await DoctorSlot.create({
+            doctorId,
+            slotDate,
+            startTime,
+            endTime,
+            slotType: slotType || 'teleconsultation',
+            isBooked: false,
+          });
+          createdSlots.push(newSlot);
+        }
+      }
+
+      return res.status(201).json({
+        success: true,
+        message: `Created ${createdSlots.length} slot(s)${skippedSlots.length ? `, skipped ${skippedSlots.length} duplicate(s)` : ''}`,
+        count: createdSlots.length,
+        slots: createdSlots,
+      });
+    }
+
+    const { slotDate, startTime, endTime, slotType } = req.body;
 
     if (!slotDate || !startTime || !endTime) {
       return res.status(400).json({ success: false, message: 'Please provide slotDate, startTime, and endTime' });
@@ -244,9 +283,9 @@ exports.updateDoctor = async (req, res, next) => {
 exports.getDoctorMetrics = async (req, res, next) => {
   try {
     // Find doctor linked to current user, or get first matching doctor for demo
-    let doctor = await Doctor.findOne({ userId: req.user._id });
+    let doctor = await Doctor.findOne({ userId: req.user._id }).populate('hospitalId');
     if (!doctor) {
-      doctor = await Doctor.findOne();
+      doctor = await Doctor.findOne().populate('hospitalId');
     }
 
     if (!doctor) {
@@ -257,14 +296,29 @@ exports.getDoctorMetrics = async (req, res, next) => {
           confirmedUpcoming: 0,
           totalCompleted: 0,
           internationalPatients: 0,
+          todayAppointments: 0,
+          rescheduledRequests: 0,
         },
       });
     }
 
-    const pendingCount = await Appointment.countDocuments({ doctorId: doctor._id, status: 'pending' });
-    const confirmedCount = await Appointment.countDocuments({ doctorId: doctor._id, status: 'confirmed' });
-    const completedCount = await Appointment.countDocuments({ doctorId: doctor._id, status: 'completed' });
-    const totalPatients = await Appointment.distinct('patientEmail', { doctorId: doctor._id });
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const [
+      pendingCount,
+      confirmedCount,
+      completedCount,
+      rescheduledCount,
+      todayCount,
+      totalPatients,
+    ] = await Promise.all([
+      Appointment.countDocuments({ doctorId: doctor._id, status: 'pending' }),
+      Appointment.countDocuments({ doctorId: doctor._id, status: 'confirmed' }),
+      Appointment.countDocuments({ doctorId: doctor._id, status: 'completed' }),
+      Appointment.countDocuments({ doctorId: doctor._id, status: 'rescheduled' }),
+      Appointment.countDocuments({ doctorId: doctor._id, appointmentDate: todayStr, status: { $ne: 'cancelled' } }),
+      Appointment.distinct('patientEmail', { doctorId: doctor._id }),
+    ]);
 
     res.json({
       success: true,
@@ -273,6 +327,8 @@ exports.getDoctorMetrics = async (req, res, next) => {
         pendingRequests: pendingCount,
         confirmedUpcoming: confirmedCount,
         totalCompleted: completedCount,
+        rescheduledRequests: rescheduledCount,
+        todayAppointments: todayCount,
         internationalPatients: totalPatients.length,
       },
     });
