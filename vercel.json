@@ -9,10 +9,6 @@
       }
     },
     {
-      "src": "server/server.js",
-      "use": "@vercel/node"
-    },
-    {
       "src": "api/index.js",
       "use": "@vercel/node"
     }
@@ -20,11 +16,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/server/server.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/uploads/(.*)",
-      "dest": "/server/server.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/assets/(.*)",
